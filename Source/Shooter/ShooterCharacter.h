@@ -8,6 +8,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class USoundCue;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -40,6 +41,9 @@ protected:
 	*/
 	void LookUpAtRate(float Rate);
 
+	/** Called when the Fire Button is pressed */
+	void FireWeapon();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -64,6 +68,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float BaseLookUpRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	USoundCue* FireSound;
+		 
 public:
 	/** Returns CameraBoom suboject */
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
