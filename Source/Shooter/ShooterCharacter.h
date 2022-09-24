@@ -223,5 +223,5 @@ public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 
 	UFUNCTION(BlueprintCallable)
-	float GetCrosshairSpreadMultiplier() const { return CrosshairSpreadMultiplier;  }
+	FORCEINLINE float GetCrosshairSpreadMultiplier() const { return CrosshairSpreadMultiplier; }
 };
