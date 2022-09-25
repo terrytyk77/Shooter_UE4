@@ -172,23 +172,23 @@ void AShooterCharacter::FireWeapon()
 			BeamEnd);
 
 		if (bBeamEnd)
-		{
+		{ 
 			if (ImpactParticles)
 				UGameplayStatics::SpawnEmitterAtLocation(
 					GetWorld(),
 					ImpactParticles,
 					BeamEnd);
+		}
 
-			if (BeamParticles)
-			{
-				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
-					GetWorld(),
-					BeamParticles,
-					SocketTransform);
+		if (BeamParticles)
+		{
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				BeamParticles,
+				SocketTransform);
 
-				if (Beam)
-					Beam->SetVectorParameter(FName("Target"), BeamEnd);
-			}
+			if (Beam)
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
 		}
 	}
 
@@ -202,6 +202,7 @@ void AShooterCharacter::FireWeapon()
 	// Start bullet fire timer for crosshairs
 	StartCrosshairBulletFire();
 }
+
 bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
 {
 	// Check for crosshair trace hit
