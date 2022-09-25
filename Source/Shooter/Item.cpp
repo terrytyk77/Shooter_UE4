@@ -10,6 +10,8 @@
 // Sets default values
 AItem::AItem()
 	: ItemName(FString("Default Item"))
+	, ItemCount(0)
+	, ItemRarity(EItemRarity::EIR_Common)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -35,7 +37,11 @@ void AItem::BeginPlay()
 	Super::BeginPlay();
 
 	// Hide Pickup Widget
-	PickupWidget->SetVisibility(false);
+	if(PickupWidget)
+		PickupWidget->SetVisibility(false);
+
+	// Sets ActiveStars array based on Item Rarity
+	SetActiveStars();
 
 	// Setup overlap for AreaSphere
 	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereBeginOverlap);
@@ -56,6 +62,20 @@ void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	if (AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(OtherActor))
 		ShooterCharacter->IncrementOverlappedItemCount(-1);
+}
+
+void AItem::SetActiveStars()
+{
+	int8 _ItemRarity = (int8) ItemRarity;
+	int8 RarityCount = (int8) EItemRarity::EIR_MAX;
+
+	for (int8 i = 0; i < RarityCount; i++)
+	{
+		if (i <= _ItemRarity)
+			ActiveStars.Add(true);
+		else
+			ActiveStars.Add(false);
+	}
 }
 
 // Called every frame
