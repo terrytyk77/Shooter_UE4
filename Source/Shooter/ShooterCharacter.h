@@ -11,6 +11,7 @@ class UCameraComponent;
 class USoundCue;
 class UParticleSystem;
 class UAnimMontage;
+class AItem;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -86,6 +87,9 @@ protected:
 
 	/** Line trace for items under the crosshair */
 	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
+
+	/** Trace for items if OverlappedItemCount > 0 */
+	void TraceForItems();
 
 public:	
 	// Called every frame
@@ -212,6 +216,16 @@ private:
 	/** Sets a timer between gunshots */
 	FTimerHandle AutoFireTimer;
 
+	/** True if we should trace every frame for items */
+	bool bShouldTraceForItems;
+
+	/** Number of overlapped AItems */
+	int8 OverlappedItemCount;
+
+	/** The AItem we hit last frame */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	AItem* TraceHitItemLastFrame;
+
 	float ShootTimeDuration;
 
 	bool bFiringBullet;
@@ -227,4 +241,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCrosshairSpreadMultiplier() const { return CrosshairSpreadMultiplier; }
+
+	FORCEINLINE int8 GetOverlappedItemCount() const { return OverlappedItemCount; }
+
+	/** Adds/subtracts to/from OverlappedItemCount and updates bShouldTraceForItems */
+	void IncrementOverlappedItemCount(int8 Amount);
 };
