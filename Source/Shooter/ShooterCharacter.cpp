@@ -48,6 +48,8 @@ AShooterCharacter::AShooterCharacter()
 	, AutomaticFireRate(0.1f)
 	, bShouldFire(true)
 	, bFireButtonPressed(false)
+	// Item trace variables
+	, bShouldTraceForItems(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -377,6 +379,35 @@ bool AShooterCharacter::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& 
 	return false;
 }
 
+void AShooterCharacter::TraceForItems()
+{
+	if (bShouldTraceForItems)
+	{
+		FHitResult ItemTraceResult;
+		FVector HitLocation;
+		if (TraceUnderCrosshairs(ItemTraceResult, HitLocation))
+		{
+			AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
+			if (HitItem)
+				if (UWidgetComponent* PickupWidget = HitItem->GetPickupWidget())
+					PickupWidget->SetVisibility(true);
+
+			// We hit an AItem last frame
+			if (TraceHitItemLastFrame)
+				if (HitItem != TraceHitItemLastFrame)
+					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+
+			// Store a reference to HitItem for next frame
+			TraceHitItemLastFrame = HitItem;
+		}
+	}
+	else if (TraceHitItemLastFrame)
+	{
+		// No longer overlapping any items, Item last frame should not show widget
+		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+	}
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -391,15 +422,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 	// Calculate crosshair spread multiplier
 	CalculateCrosshairSpread(DeltaTime);
 
-	FHitResult ItemTraceResult;
-	FVector HitLocation;
-	if (TraceUnderCrosshairs(ItemTraceResult, HitLocation))
-	{
-		AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
-		if (HitItem)
-			if (UWidgetComponent* PickupWidget = HitItem->GetPickupWidget())
-				PickupWidget->SetVisibility(true);
-	}
+	//Check OverlappedItemCount, then trace for items
+	TraceForItems();
 }
 
 // Called to bind functionality to input
@@ -423,5 +447,19 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, &AShooterCharacter::AimingButtonPressed);
 	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, &AShooterCharacter::AimingButtonReleased);
+}
+
+void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
+{
+	if (OverlappedItemCount + Amount <= 0)
+	{
+		OverlappedItemCount = 0;
+		bShouldTraceForItems = false;
+	}
+	else
+	{
+		OverlappedItemCount += Amount;
+		bShouldTraceForItems = true;
+	}
 }
 
