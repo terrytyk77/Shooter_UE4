@@ -18,6 +18,7 @@ AItem::AItem()
 	PrimaryActorTick.bCanEverTick = true;
 
 	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh"));
+	ItemMesh->SetEnableGravity(false);
 	SetRootComponent(ItemMesh);
 
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
@@ -89,6 +90,7 @@ void AItem::SetItemProperties(EItemState State)
 		case EItemState::EIS_Pickup:
 			// Set Mesh properties
 			ItemMesh->SetSimulatePhysics(false);
+			ItemMesh->SetEnableGravity(false);
 			ItemMesh->SetVisibility(true);
 			ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -104,9 +106,25 @@ void AItem::SetItemProperties(EItemState State)
 		case EItemState::EIS_Equipped:
 			// Set Mesh properties
 			ItemMesh->SetSimulatePhysics(false);
+			ItemMesh->SetEnableGravity(false);
 			ItemMesh->SetVisibility(true);
 			ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			// Set AreaSphere properties
+			AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			// Set CollisionBox properties
+			CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			break;
+
+		case EItemState::EIS_Falling:// Set Mesh properties
+			ItemMesh->SetSimulatePhysics(true);
+			ItemMesh->SetEnableGravity(true);
+			ItemMesh->SetVisibility(true);
+			ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			ItemMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+			ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			// Set AreaSphere properties
 			AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
