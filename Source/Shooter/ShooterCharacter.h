@@ -104,6 +104,9 @@ protected:
 	void SelectButtonPressed();
 	void SelectButtonReleased();
 
+	/** Drops currently equipped Weapon and Equips TraceHitItem */
+	void SwapWeapon(AWeapon* WeaponToSwap);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -235,8 +238,12 @@ private:
 	/** Number of overlapped AItems */
 	int8 OverlappedItemCount;
 
+	/** The item currently hit by our trace in TraceForItems (could be null) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	AItem* TraceHitItem;
+
 	/** The AItem we hit last frame */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	AItem* TraceHitItemLastFrame;
 
 	/** Currently equipped Weapon */

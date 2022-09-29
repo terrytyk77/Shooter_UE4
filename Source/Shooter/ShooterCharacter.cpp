@@ -397,18 +397,18 @@ void AShooterCharacter::TraceForItems()
 		FVector HitLocation;
 		if (TraceUnderCrosshairs(ItemTraceResult, HitLocation))
 		{
-			AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
-			if (HitItem)
-				if (UWidgetComponent* PickupWidget = HitItem->GetPickupWidget())
+			TraceHitItem = Cast<AItem>(ItemTraceResult.Actor);
+			if (TraceHitItem)
+				if (UWidgetComponent* PickupWidget = TraceHitItem->GetPickupWidget())
 					PickupWidget->SetVisibility(true);
 
 			// We hit an AItem last frame
 			if (TraceHitItemLastFrame)
-				if (HitItem != TraceHitItemLastFrame)
+				if (TraceHitItem != TraceHitItemLastFrame)
 					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
 
 			// Store a reference to HitItem for next frame
-			TraceHitItemLastFrame = HitItem;
+			TraceHitItemLastFrame = TraceHitItem;
 		}
 	}
 	else if (TraceHitItemLastFrame)
@@ -450,17 +450,30 @@ void AShooterCharacter::DropWeapon()
 	{
 		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
 		EquippedWeapon->GetItemMesh()->DetachFromComponent(DetachmentTransformRules);
-		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
+		
+		EquippedWeapon->ThrowWeapon();
 	}
 }
 
 void AShooterCharacter::SelectButtonPressed()
 {
-	DropWeapon();
+	if (TraceHitItem)
+	{
+		AWeapon* TraceHitWeapon = Cast<AWeapon>(TraceHitItem);
+		SwapWeapon(TraceHitWeapon);
+	}	
 }
 
 void AShooterCharacter::SelectButtonReleased()
 {
+}
+
+void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
+{
+	DropWeapon();
+	EquipWeapon(WeaponToSwap);
+	TraceHitItem = nullptr;
+	TraceHitItemLastFrame = nullptr;
 }
 
 // Called every frame
