@@ -243,7 +243,7 @@ private:
 	AItem* TraceHitItem;
 
 	/** The AItem we hit last frame */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
 	AItem* TraceHitItemLastFrame;
 
 	/** Currently equipped Weapon */
@@ -258,7 +258,15 @@ private:
 
 	bool bFiringBullet;
 	FTimerHandle CrosshairShootTimer;
-		 
+
+	/** Distance outward from the camera for the interp destination */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	float CameraInterpDistance;
+
+	/** Distance upward from the camera for the interp destination */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	float CameraInterpElevation;
+
 public:
 	/** Returns CameraBoom suboject */
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -274,4 +282,6 @@ public:
 
 	/** Adds/subtracts to/from OverlappedItemCount and updates bShouldTraceForItems */
 	void IncrementOverlappedItemCount(int8 Amount);
+
+	FVector GetCameraInterpLocation();
 };
