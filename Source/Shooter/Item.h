@@ -9,6 +9,8 @@
 class UBoxComponent;
 class USphereComponent;
 class UWidgetComponent;
+class AShooterCharacter;
+class UCurveFloat;
 
 UENUM(BlueprintType)
 enum class EItemRarity : uint8
@@ -44,6 +46,9 @@ public:
 	// Sets default values for this actor's properties
 	AItem();
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -62,9 +67,11 @@ protected:
 	/** Sets properties of the Item's components based on State */
 	void SetItemProperties(EItemState State);
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	/** Called when ItemInterpTimer is finished */
+	void FinishInterping();
+
+	/** Handle item interpolation when in the EquipInterping state */
+	void ItemInterp(float DeltaTimer);
 
 private:
 	/** Skeletal Mesh for the item */
@@ -102,6 +109,32 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	EItemState ItemState;
 
+	/** The curve asset to use for the item's z location when interping */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* ItemZCurve;
+
+	/** Starting location when interping begins */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	FVector ItemInterpStartLocation;
+
+	/** Target interp location in front of the camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	FVector CameraTargetLocation;
+
+	/** True when interping */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	bool bInterping;
+
+	/** Plays when we start interping */
+	FTimerHandle ItemInterpTimer;
+	/** Duration of the curve and timer */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float ZCurveTime;
+
+	/** Pointer to character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	AShooterCharacter* Character;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -109,4 +142,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 	void SetItemState(EItemState State);
+
+	/** Called from the AShooterCharacter class */
+	void StartItemCurve(AShooterCharacter* Char);
 };
