@@ -461,10 +461,7 @@ void AShooterCharacter::DropWeapon()
 void AShooterCharacter::SelectButtonPressed()
 {
 	if (TraceHitItem)
-	{
-		AWeapon* TraceHitWeapon = Cast<AWeapon>(TraceHitItem);
-		SwapWeapon(TraceHitWeapon);
-	}	
+		TraceHitItem->StartItemCurve(this);
 }
 
 void AShooterCharacter::SelectButtonReleased()
@@ -542,5 +539,13 @@ FVector AShooterCharacter::GetCameraInterpLocation()
 	const FVector CameraWorldLocation{ FollowCamera->GetComponentLocation() };
 	const FVector CameraForward{ FollowCamera->GetForwardVector() };
 	return CameraWorldLocation + CameraForward * CameraInterpDistance + FVector(0, 0, CameraInterpElevation);
+}
+
+void AShooterCharacter::GetPickupItem(AItem* Item)
+{
+	if (AWeapon* Weapon = Cast<AWeapon>(Item))
+	{
+		SwapWeapon(Weapon);
+	}
 }
 
