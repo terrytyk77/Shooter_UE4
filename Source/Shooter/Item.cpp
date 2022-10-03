@@ -15,10 +15,12 @@ AItem::AItem()
 	, ItemRarity(EItemRarity::EIR_Common)
 	, ItemState(EItemState::EIS_Pickup)
 	// Item interp variables
-	, ZCurveTime(0.7f)
+	, ZCurveTime(.7f)
 	, ItemInterpStartLocation(FVector(0.f))
 	, CameraTargetLocation(FVector(0.f))
 	, bInterping(false)
+	, ItemInterpX(0.f)
+	, ItemInterpY(0.f)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -169,11 +171,12 @@ void AItem::Tick(float DeltaTime)
 
 void AItem::FinishInterping()
 {
+	bInterping = false;
 	if (Character)
 		Character->GetPickupItem(this);
 }
 
-void AItem::ItemInterp(float DeltaTimer)
+void AItem::ItemInterp(float DeltaTime)
 {
 	if (!bInterping) return;
 
@@ -193,12 +196,21 @@ void AItem::ItemInterp(float DeltaTimer)
 		// Scale factor to multiply with CurveValue
 		const float DeltaZ = ItemToCamera.Size();
 		
+		const FVector CurrentLocation{ GetActorLocation() };
+		// Interpolated X value
+		const float InterpXValue = FMath::FInterpTo(CurrentLocation.X, CameraInterpLocation.X, DeltaTime, 30.f);
+		// Interpolated Y value
+		const float InterpYValue = FMath::FInterpTo(CurrentLocation.Y, CameraInterpLocation.Y, DeltaTime, 30.f);
+
+		// Set X and Y ItemLocation to Interped values
+		ItemLocation.X = InterpXValue;
+		ItemLocation.Y = InterpYValue;
+
 		// Adding curve value to the Z component of the Initial Location (scaled by DeltaZ)
-		ItemLocation.Z += CurveValue * DeltaZ;
+		ItemLocation.Z = CurveValue * DeltaZ;
 		SetActorLocation(ItemLocation, true, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
-
 
 void AItem::SetItemState(EItemState State)
 {
@@ -216,4 +228,3 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	SetItemState(EItemState::EIS_EquipInterping);
 	GetWorldTimerManager().SetTimer(ItemInterpTimer, this, &AItem::FinishInterping, ZCurveTime);
 }
-
