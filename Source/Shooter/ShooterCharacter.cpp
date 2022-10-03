@@ -56,6 +56,7 @@ AShooterCharacter::AShooterCharacter()
 	, bFireButtonPressed(false)
 	// Item trace variables
 	, bShouldTraceForItems(false)
+	, OverlappedItemCount(0)
 	// Camera interp location variables
 	, CameraInterpDistance(250.f)
 	, CameraInterpElevation(65.f)
@@ -454,6 +455,7 @@ void AShooterCharacter::DropWeapon()
 		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
 		EquippedWeapon->GetItemMesh()->DetachFromComponent(DetachmentTransformRules);
 		
+		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
 		EquippedWeapon->ThrowWeapon();
 	}
 }
@@ -548,4 +550,3 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 		SwapWeapon(Weapon);
 	}
 }
-

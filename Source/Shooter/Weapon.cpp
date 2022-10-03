@@ -25,17 +25,15 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::ThrowWeapon()
 {
-	SetItemState(EItemState::EIS_Falling);
-
 	FRotator MeshRotation{ 0.f, GetItemMesh()->GetComponentRotation().Yaw, 0.f };
 	GetItemMesh()->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	
 	const FVector MeshForward{ GetItemMesh()->GetForwardVector() };
 	const FVector MeshRight{ GetItemMesh()->GetRightVector() };
-
 	// Direction in which we throw the Weapon
 	FVector ImpulseDirection = MeshRight.RotateAngleAxis(-20.f, MeshForward);
 
-	float RandomRotation = FMath::FRandRange(-30.f, 30.f);
+	float RandomRotation = FMath::FRandRange(0, 30.f);
 	ImpulseDirection = ImpulseDirection.RotateAngleAxis(RandomRotation, FVector::UpVector);
 	ImpulseDirection *= 20'000.f;
 	
