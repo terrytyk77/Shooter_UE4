@@ -173,13 +173,16 @@ void AShooterCharacter::LookUp(float Value)
 
 void AShooterCharacter::FireWeapon()
 {
+	if (!EquippedWeapon)
+		return;
+
 	if (FireSound)
 		UGameplayStatics::PlaySound2D(this, FireSound);
 
-	const USkeletalMeshSocket* BarrelSocket = GetMesh()->GetSocketByName("BarrelSocket");
+	const USkeletalMeshSocket* BarrelSocket = EquippedWeapon->GetItemMesh()->GetSocketByName("BarrelSocket");
 	if (BarrelSocket)
 	{
-		const FTransform SocketTransform = BarrelSocket->GetSocketTransform(GetMesh());
+		const FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
 
 		if (MuzzleFlash)
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
@@ -338,11 +341,10 @@ void AShooterCharacter::FinishCrosshairBulletFire()
 
 void AShooterCharacter::FireButtonPressed()
 {
-	if (WeaponHasAmmo)
-	{
-		bFireButtonPressed = true;
+	bFireButtonPressed = true;
+
+	if (WeaponHasAmmo())
 		StartFireTimer();
-	}
 }
 
 void AShooterCharacter::FireButtonReleased()
@@ -362,7 +364,7 @@ void AShooterCharacter::StartFireTimer()
 
 void AShooterCharacter::AutoFireReset()
 {
-	if (WeaponHasAmmo)
+	if (WeaponHasAmmo())
 	{
 		bShouldFire = true;
 
