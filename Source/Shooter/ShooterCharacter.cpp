@@ -439,7 +439,12 @@ void AShooterCharacter::DropWeapon()
 void AShooterCharacter::SelectButtonPressed()
 {
 	if (TraceHitItem)
+	{
 		TraceHitItem->StartItemCurve(this);
+
+		if (TraceHitItem->GetPickUpSound())
+			UGameplayStatics::PlaySound2D(this, TraceHitItem->GetPickUpSound());
+	}
 }
 
 void AShooterCharacter::SelectButtonReleased()
@@ -681,8 +686,9 @@ FVector AShooterCharacter::GetCameraInterpLocation()
 
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
+	if (Item->GetEquipSound())
+		UGameplayStatics::PlaySound2D(this, Item->GetEquipSound());
+
 	if (AWeapon* Weapon = Cast<AWeapon>(Item))
-	{
 		SwapWeapon(Weapon);
-	}
 }

@@ -11,6 +11,7 @@ class USphereComponent;
 class UWidgetComponent;
 class AShooterCharacter;
 class UCurveFloat;
+class USoundCue;
 
 UENUM(BlueprintType)
 enum class EItemRarity : uint8
@@ -145,6 +146,14 @@ private:
 	/** Curve used to scale the item when interping */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* ItemScaleCurve;
+	
+	/** Sound played when the Item is picked up */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	USoundCue* PickupSound;
+	
+	/** Sound played when the Item is equipped */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	USoundCue* EquipSound;
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
@@ -152,6 +161,9 @@ public:
 	FORCEINLINE UBoxComponent* GetCollsionBox() const { return CollisionBox; }
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
+	FORCEINLINE USoundCue* GetPickUpSound() const { return PickupSound; }
+	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
+
 	void SetItemState(EItemState State);
 
 	/** Called from the AShooterCharacter class */
