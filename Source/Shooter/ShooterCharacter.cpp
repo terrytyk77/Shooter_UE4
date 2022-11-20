@@ -535,7 +535,7 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	 if (!EquippedWeapon) return;
 
 	 // Do we have ammo of the correct type?
-	 if (CarryingAmmo()) // replace with CarryingAmmo()
+	 if (CarryingAmmo() && !EquippedWeapon->ClipIsFull()) // replace with CarryingAmmo()
 	 {
 		 CombatState = ECombatState::ECS_Reloading;
 		 UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
