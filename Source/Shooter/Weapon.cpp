@@ -4,8 +4,9 @@
 #include "Weapon.h"
 #include "Math/UnrealMathUtility.h"
 
-AWeapon::AWeapon()
-	: ThrowWeaponTime(.7f)
+AWeapon::AWeapon(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+	, ThrowWeaponTime(.7f)
 	, bFalling(false)
 	, Ammo(30)
 	, MagazineCapacity(30)

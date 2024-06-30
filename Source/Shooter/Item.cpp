@@ -8,8 +8,9 @@
 #include "Camera/CameraComponent.h"
 
 // Sets default values
-AItem::AItem()
-	: ItemName(FString("Default Item"))
+AItem::AItem(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+	, ItemName(FString("Default Item"))
 	, ItemCount(0)
 	, ItemRarity(EItemRarity::EIR_Common)
 	, ItemState(EItemState::EIS_Pickup)

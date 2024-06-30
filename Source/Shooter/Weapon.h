@@ -24,7 +24,7 @@ class SHOOTER_API AWeapon : public AItem
 	GENERATED_BODY()
 
 public:
-	AWeapon();
+	AWeapon(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Tick(float DeltaTime) override;
 
