@@ -3,6 +3,7 @@
 #include "ShooterCharacter.h"
 #include "Item.h"
 #include "Weapon.h"
+#include "Ammo.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -663,6 +664,30 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 		 GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
  }
 
+ void AShooterCharacter::PickupAmmo(AAmmo* Ammo)
+ {
+	 // check to see if AmmoMap contains Ammo's AmmoType
+	 if (AmmoMap.Find(Ammo->GetAmmoType()))
+	 {
+		 // Get amount of ammo in our AmmoMap for Ammo's type
+		 int32 AmmoCount{ AmmoMap[Ammo->GetAmmoType()] };
+		 AmmoCount += Ammo->GetItemCount();
+		 // Set the amount of ammo in the Map for this type
+		 AmmoMap[Ammo->GetAmmoType()] = AmmoCount;
+	 }
+
+	 if (EquippedWeapon->GetAmmoType() == Ammo->GetAmmoType())
+	 {
+		 // Check to see if the gun is empty
+		 if (EquippedWeapon->GetAmmo() == 0)
+		 {
+			 ReloadWeapon();
+		 }
+	 }
+
+	 Ammo->Destroy();
+ }
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -776,4 +801,7 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 
 	if (AWeapon* Weapon = Cast<AWeapon>(Item))
 		SwapWeapon(Weapon);
+
+	if (AAmmo* Ammo = Cast<AAmmo>(Item))
+		PickupAmmo(Ammo);
 }
