@@ -45,7 +45,7 @@ class SHOOTER_API AItem : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	AItem();
+	AItem(const FObjectInitializer& ObjectInitializer);
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
