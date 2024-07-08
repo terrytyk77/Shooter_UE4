@@ -72,6 +72,11 @@ AShooterCharacter::AShooterCharacter()
 	, BaseGroundFriction(2.f)
 	, CrouchingGroundFriction(100.f)
 	, bAimingButtonPressed(false)
+	// Pickup sound timer properties
+	, bShouldPlayPickupSound(true)
+	, bShouldPlayEquipSound(true)
+	, PickupSoundResetTime(0.2f)
+	, EquipSoundResetTime(0.2f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -461,6 +466,7 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 		// Set EquippedWeapon to the newly spawned Weapon
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
+		WeaponToEquip->PlayEquipSound();
 	}
 }
 
@@ -754,6 +760,18 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	 InterpLocations[Index].ItemCount += Amount;
  }
 
+ void AShooterCharacter::StartPickupSoundTimer()
+ {
+	 bShouldPlayPickupSound = false;
+	 GetWorldTimerManager().SetTimer(PickupSoundTimer, this, &ThisClass::ResetPickupSoundTimer, PickupSoundResetTime);
+ }
+
+ void AShooterCharacter::StartEquipSoundTimer()
+ {
+	 bShouldPlayEquipSound = false;
+	 GetWorldTimerManager().SetTimer(EquipSoundTimer, this, &ThisClass::ResetEquipSoundTimer, EquipSoundResetTime);
+ }
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -816,7 +834,7 @@ void AShooterCharacter::FinishReloading()
 	// Update the AmmoMap
 	if (AmmoMap.Contains(AmmoType))
 	{
-		// Amout of ammo the Character is carrying of the EquippedWeapon type
+		// Amount of ammo the Character is carrying of the EquippedWeapon type
 		int32 CarriedAmmo = AmmoMap[AmmoType];
 
 		// Space left in the magazine of EquippedWeapon
@@ -837,6 +855,16 @@ void AShooterCharacter::FinishReloading()
 			AmmoMap.Add(AmmoType, CarriedAmmo);
 		}
 	}
+}
+
+void AShooterCharacter::ResetPickupSoundTimer()
+{
+	bShouldPlayPickupSound = true;
+}
+
+void AShooterCharacter::ResetEquipSoundTimer()
+{
+	bShouldPlayEquipSound = true;
 }
 
 void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
@@ -863,9 +891,6 @@ void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
 
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
-	if (Item->GetEquipSound())
-		UGameplayStatics::PlaySound2D(this, Item->GetEquipSound());
-
 	if (AWeapon* Weapon = Cast<AWeapon>(Item))
 		SwapWeapon(Weapon);
 

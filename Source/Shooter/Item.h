@@ -58,6 +58,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Called in AShooterCharacter::GetPickupItem
+	void PlayEquipSound();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -84,6 +87,8 @@ protected:
 
 	/** Get interp location based on the item type */
 	FVector GetInterpLocation();
+
+	void PlayPickupSound();
 
 private:
 	/** Skeletal Mesh for the item */
@@ -180,8 +185,6 @@ public:
 	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
-	FORCEINLINE USoundCue* GetPickUpSound() const { return PickupSound; }
-	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
 
 	void SetItemState(EItemState State);
