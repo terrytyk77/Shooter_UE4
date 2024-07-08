@@ -22,7 +22,7 @@ enum class EItemRarity : uint8
 	EIR_Epic		UMETA(DisplayName = "Epic"),
 	EIR_Legendary	UMETA(DisplayName = "Legendary"),
 
-	EIR_MAX			UMETA(DisplayName = "DeultMax")
+	EIR_MAX			UMETA(DisplayName = "DefaultMAX")
 };
 
 UENUM(BlueprintType)
@@ -34,9 +34,17 @@ enum class EItemState : uint8
 	EIS_Equipped		UMETA(DisplayName = "Equipped"),
 	EIS_Falling			UMETA(DisplayName = "Falling"),
 
-	EIS_MAX				UMETA(DisplayName = "DeultMax")
+	EIS_MAX				UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	EIT_Ammo UMETA(DisplayName = "Ammo"),
+	EIT_Weapon UMETA(DisplayName = "Weapon"),
+
+	EIT_MAX UMETA(DisplayName = "DefaultMAX")
+};
 
 UCLASS()
 class SHOOTER_API AItem : public AActor
@@ -73,6 +81,9 @@ protected:
 
 	/** Handle item interpolation when in the EquipInterping state */
 	void ItemInterp(float DeltaTime);
+
+	/** Get interp location based on the item type */
+	FVector GetInterpLocation();
 
 private:
 	/** Skeletal Mesh for the item */
@@ -155,10 +166,18 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* EquipSound;
 
+	/** Enum for the type of item this Item is */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	EItemType ItemType;
+
+	/** Index of the interp location this item is interping to */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	int32 InterpLocIndex;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
-	FORCEINLINE UBoxComponent* GetCollsionBox() const { return CollisionBox; }
+	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 	FORCEINLINE USoundCue* GetPickUpSound() const { return PickupSound; }

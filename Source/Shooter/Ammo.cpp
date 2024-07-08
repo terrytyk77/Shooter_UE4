@@ -19,7 +19,7 @@ AAmmo::AAmmo(const FObjectInitializer& ObjectInitializer)
 	AmmoCollisionSphere->SetSphereRadius(50.f);
 	AmmoCollisionSphere->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::AmmoSphereOverlap);
 
-	GetCollsionBox()->SetupAttachment(GetRootComponent());
+	GetCollisionBox()->SetupAttachment(GetRootComponent());
 	GetPickupWidget()->SetupAttachment(GetRootComponent());
 	GetAreaSphere()->SetupAttachment(GetRootComponent());
 }
