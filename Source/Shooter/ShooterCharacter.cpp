@@ -424,14 +424,24 @@ void AShooterCharacter::TraceForItems()
 		{
 			TraceHitItem = Cast<AItem>(ItemTraceResult.Actor);
 			if (TraceHitItem)
+			{
 				if (UWidgetComponent* PickupWidget = TraceHitItem->GetPickupWidget())
+				{
 					PickupWidget->SetVisibility(true);
-
+					TraceHitItem->EnableCustomDepth();
+				}
+			}
+			
 			// We hit an AItem last frame
 			if (TraceHitItemLastFrame)
+			{
 				if (TraceHitItem != TraceHitItemLastFrame)
+				{
 					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
-
+					TraceHitItemLastFrame->DisableCustomDepth();
+				}
+			}
+				
 			// Store a reference to HitItem for next frame
 			TraceHitItemLastFrame = TraceHitItem;
 		}
@@ -440,6 +450,7 @@ void AShooterCharacter::TraceForItems()
 	{
 		// No longer overlapping any items, Item last frame should not show widget
 		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+		TraceHitItemLastFrame->DisableCustomDepth();
 	}
 }
 
@@ -447,8 +458,10 @@ AWeapon* AShooterCharacter::SpawnDefaultWeapon()
 {
 	// Check the TSubClassOf variable
 	if (DefaultWeaponClass)
+	{
 		// Spawn the weapon
 		return GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass);
+	}
 
 	return nullptr;
 }
@@ -460,9 +473,11 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 		// Get the Hand Socket
 		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
+		{
 			// Attach the Weapon to the hand socket RightHandSocket
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
-		
+		}
+
 		// Set EquippedWeapon to the newly spawned Weapon
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);

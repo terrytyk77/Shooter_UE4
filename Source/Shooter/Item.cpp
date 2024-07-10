@@ -26,6 +26,8 @@ AItem::AItem(const FObjectInitializer& ObjectInitializer)
 	, InterpInitialYawOffset(0.f)
 	, ItemType(EItemType::EIT_MAX)
 	, InterpLocIndex(0)
+	, MaterialIndex(0)
+	, bCanChangeCustomDepth(true)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -64,6 +66,9 @@ void AItem::BeginPlay()
 
 	// Set Item properties base on ItemState
 	SetItemProperties(ItemState);
+
+	// Set custom depth to disabled
+	InitializeCustomDepth();
 }
 
 void AItem::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -186,6 +191,10 @@ void AItem::FinishInterping()
 
 	// Set scale back to normal
 	SetActorScale3D(FVector(1.f));
+
+	DisableGlowMaterial();
+	bCanChangeCustomDepth = true;
+	DisableCustomDepth();
 }
 
 void AItem::ItemInterp(float DeltaTime)
@@ -268,6 +277,53 @@ void AItem::PlayPickupSound()
 	}
 }
 
+void AItem::EnableCustomDepth()
+{
+	if (bCanChangeCustomDepth)
+	{
+		ItemMesh->SetRenderCustomDepth(true);
+	}
+}
+
+void AItem::DisableCustomDepth()
+{
+	if (bCanChangeCustomDepth)
+	{
+		ItemMesh->SetRenderCustomDepth(false);
+	}
+}
+
+void AItem::InitializeCustomDepth()
+{
+	DisableCustomDepth();
+}
+
+void AItem::OnConstruction(const FTransform& Transform)
+{
+	if (MaterialInstance)
+	{
+		DynamicMaterialInstance = UMaterialInstanceDynamic::Create(MaterialInstance, this);
+		ItemMesh->SetMaterial(MaterialIndex, DynamicMaterialInstance);
+		EnableGlowMaterial();
+	}
+}
+
+void AItem::EnableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 0);
+	}
+}
+
+void AItem::DisableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1);
+	}
+}
+
 void AItem::PlayEquipSound()
 {
 	if (!Character || !Character->ShouldPlayEquipSound())
@@ -312,4 +368,6 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	const float ItemRotationYaw = GetActorRotation().Yaw;
 	// Initial Yaw offset between Camera and Item
 	InterpInitialYawOffset = ItemRotationYaw - CameraRotationYaw;
+
+	bCanChangeCustomDepth = false;
 }
