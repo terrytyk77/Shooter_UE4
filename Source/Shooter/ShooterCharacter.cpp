@@ -93,7 +93,7 @@ AShooterCharacter::AShooterCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach camera to end of boom
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	// Don't rotate the characterm when the controller rotate.
+	// Don't rotate the character when the controller rotate.
 	// Let the controller affect the camera only.
 	bUseControllerRotationPitch	= false;
 	bUseControllerRotationYaw	= true;
@@ -144,6 +144,8 @@ void AShooterCharacter::BeginPlay()
 
 	// Spawn the default weapon and equip it to the mesh
 	EquipWeapon(SpawnDefaultWeapon());
+	EquippedWeapon->DisableCustomDepth();
+	EquippedWeapon->DisableGlowMaterial();
 	
 	InitializeAmmoMap();
 
