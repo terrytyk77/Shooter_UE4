@@ -10,6 +10,7 @@ class UBoxComponent;
 class USphereComponent;
 class UWidgetComponent;
 class AShooterCharacter;
+class UCurveVector;
 class UCurveFloat;
 class USoundCue;
 
@@ -203,7 +204,11 @@ private:
 
 	/** Curve to drive the dynamic material parameters */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	class UCurveVector* PulseCurve;
+	UCurveVector* PulseCurve;
+
+	/** Curve to drive the dynamic material parameters */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UCurveVector* InterpPulseCurve;
 
 	FTimerHandle PulseTimer;
 
