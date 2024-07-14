@@ -144,6 +144,8 @@ void AShooterCharacter::BeginPlay()
 
 	// Spawn the default weapon and equip it to the mesh
 	EquipWeapon(SpawnDefaultWeapon());
+	Inventory.Add(EquippedWeapon);
+	EquippedWeapon->SetSlotIndex(0);
 	EquippedWeapon->DisableCustomDepth();
 	EquippedWeapon->DisableGlowMaterial();
 	
@@ -425,6 +427,11 @@ void AShooterCharacter::TraceForItems()
 		if (TraceUnderCrosshairs(ItemTraceResult, HitLocation))
 		{
 			TraceHitItem = Cast<AItem>(ItemTraceResult.Actor);
+			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
+			{
+				TraceHitItem = nullptr;
+			}
+
 			if (TraceHitItem)
 			{
 				if (UWidgetComponent* PickupWidget = TraceHitItem->GetPickupWidget())
@@ -480,10 +487,20 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
 		}
 
+		if (EquippedWeapon)
+		{
+			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
+		}
+		else
+		{
+			// -1 == no EquippedWeapon yet. No need to reverse the icon animation
+			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
+		}
+
 		// Set EquippedWeapon to the newly spawned Weapon
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
-		WeaponToEquip->PlayEquipSound();
+		EquippedWeapon->PlayEquipSound();
 	}
 }
 
@@ -501,9 +518,15 @@ void AShooterCharacter::DropWeapon()
 
 void AShooterCharacter::SelectButtonPressed()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (TraceHitItem)
 	{
 		TraceHitItem->StartItemCurve(this);
+		TraceHitItem = nullptr;
 	}
 }
 
@@ -513,6 +536,12 @@ void AShooterCharacter::SelectButtonReleased()
 
 void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 {
+	if (Inventory.Num() > EquippedWeapon->GetSlotIndex())
+	{
+		Inventory[EquippedWeapon->GetSlotIndex()] = WeaponToSwap;
+		WeaponToSwap->SetSlotIndex(EquippedWeapon->GetSlotIndex());
+	}
+
 	DropWeapon();
 	EquipWeapon(WeaponToSwap);
 	TraceHitItem = nullptr;
@@ -745,6 +774,51 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	 InterpLocations.Emplace(InterpComp6);
  }
 
+ void AShooterCharacter::FKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);
+ }
+
+ void AShooterCharacter::OneKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
+ }
+
+ void AShooterCharacter::TwoKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 2);
+ }
+
+ void AShooterCharacter::ThreeKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 3);
+ }
+
+ void AShooterCharacter::FourKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 4);
+ }
+
+ void AShooterCharacter::FiveKeyPressed()
+ {
+	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 5);
+ }
+
+ void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
+ {
+	 if (CombatState != ECombatState::ECS_Unoccupied || CurrentItemIndex == NewItemIndex || NewItemIndex == EquippedWeapon->GetSlotIndex() || NewItemIndex >= Inventory.Num())
+	 {
+		 return;
+	 }
+
+	 auto OldEquippedWeapon = EquippedWeapon;
+	 auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
+	 EquipWeapon(NewWeapon);
+
+	 OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
+	 NewWeapon->SetItemState(EItemState::EIS_Equipped);
+ }
+
  int32 AShooterCharacter::GetInterpLocationIndex()
  {
 	 int32 LowestIndex = 1;
@@ -816,28 +890,35 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
-	PlayerInputComponent->BindAxis("Turn", this, &AShooterCharacter::Turn);
-	PlayerInputComponent->BindAxis("LookUp", this, &AShooterCharacter::LookUp);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ThisClass::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ThisClass::MoveRight);
+	PlayerInputComponent->BindAxis("TurnRate", this, &ThisClass::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &ThisClass::LookUpAtRate);
+	PlayerInputComponent->BindAxis("Turn", this, &ThisClass::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &ThisClass::LookUp);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ThisClass::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released,this, &ACharacter::StopJumping);
 	
-	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
-	PlayerInputComponent->BindAction("FireButton", IE_Released, this, &AShooterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &ThisClass::FireButtonPressed);
+	PlayerInputComponent->BindAction("FireButton", IE_Released, this, &ThisClass::FireButtonReleased);
 
-	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, &AShooterCharacter::AimingButtonPressed);
-	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, &AShooterCharacter::AimingButtonReleased);
+	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, &ThisClass::AimingButtonPressed);
+	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, &ThisClass::AimingButtonReleased);
 
-	PlayerInputComponent->BindAction("Select", IE_Pressed, this, &AShooterCharacter::SelectButtonPressed);
-	PlayerInputComponent->BindAction("Select", IE_Released, this, &AShooterCharacter::SelectButtonReleased);
+	PlayerInputComponent->BindAction("Select", IE_Pressed, this, &ThisClass::SelectButtonPressed);
+	PlayerInputComponent->BindAction("Select", IE_Released, this, &ThisClass::SelectButtonReleased);
 
-	PlayerInputComponent->BindAction("ReloadButton", IE_Pressed, this, &AShooterCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("ReloadButton", IE_Pressed, this, &ThisClass::ReloadButtonPressed);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterCharacter::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ThisClass::CrouchButtonPressed);
+
+	PlayerInputComponent->BindAction("FKey", IE_Pressed, this, &ThisClass::FKeyPressed);
+	PlayerInputComponent->BindAction("1Key", IE_Pressed, this, &ThisClass::OneKeyPressed);
+	PlayerInputComponent->BindAction("2Key", IE_Pressed, this, &ThisClass::TwoKeyPressed);
+	PlayerInputComponent->BindAction("3Key", IE_Pressed, this, &ThisClass::ThreeKeyPressed);
+	PlayerInputComponent->BindAction("4Key", IE_Pressed, this, &ThisClass::FourKeyPressed);
+	PlayerInputComponent->BindAction("5Key", IE_Pressed, this, &ThisClass::FiveKeyPressed);
 }
 
 void AShooterCharacter::FinishReloading()
@@ -909,10 +990,24 @@ void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
 	if (AWeapon* Weapon = Cast<AWeapon>(Item))
-		SwapWeapon(Weapon);
+	{
+		if (Inventory.Num() < INVENTORY_CAPACITY)
+		{
+			Weapon->SetSlotIndex(Inventory.Num());
+			Inventory.Add(Weapon);
+			Weapon->SetItemState(EItemState::EIS_PickedUp);
+		}
+		else // Inventory is full! Swap with EquippedWeapon
+		{
+			SwapWeapon(Weapon);
+		}
+	}
+
 
 	if (AAmmo* Ammo = Cast<AAmmo>(Item))
+	{
 		PickupAmmo(Ammo);
+	}
 }
 
 FInterpLocation AShooterCharacter::GetInterpLocation(int32 Index)
