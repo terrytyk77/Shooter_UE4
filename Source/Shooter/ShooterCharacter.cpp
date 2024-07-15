@@ -148,6 +148,7 @@ void AShooterCharacter::BeginPlay()
 	EquippedWeapon->SetSlotIndex(0);
 	EquippedWeapon->DisableCustomDepth();
 	EquippedWeapon->DisableGlowMaterial();
+	EquippedWeapon->SetCharacter(this);
 	
 	InitializeAmmoMap();
 
@@ -525,7 +526,7 @@ void AShooterCharacter::SelectButtonPressed()
 
 	if (TraceHitItem)
 	{
-		TraceHitItem->StartItemCurve(this);
+		TraceHitItem->StartItemCurve(this, true);
 		TraceHitItem = nullptr;
 	}
 }
@@ -817,6 +818,14 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 
 	 OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
 	 NewWeapon->SetItemState(EItemState::EIS_Equipped);
+
+	 CombatState = ECombatState::ECS_Equipping;
+	 UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	 if (AnimInstance && EquipMontage)
+	 {
+		 AnimInstance->Montage_Play(EquipMontage, 1.0f);
+		 AnimInstance->Montage_JumpToSection(FName("Equip"));
+	 }
  }
 
  int32 AShooterCharacter::GetInterpLocationIndex()
@@ -953,6 +962,11 @@ void AShooterCharacter::FinishReloading()
 			AmmoMap.Add(AmmoType, CarriedAmmo);
 		}
 	}
+}
+
+void AShooterCharacter::FinishEquipping()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void AShooterCharacter::ResetPickupSoundTimer()
