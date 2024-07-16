@@ -478,7 +478,7 @@ AWeapon* AShooterCharacter::SpawnDefaultWeapon()
 	return nullptr;
 }
 
-void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
+void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip, bool bSwapping)
 {
 	if (WeaponToEquip)
 	{
@@ -490,14 +490,14 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
 		}
 
-		if (EquippedWeapon)
-		{
-			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
-		}
-		else
+		if (!EquippedWeapon)
 		{
 			// -1 == no EquippedWeapon yet. No need to reverse the icon animation
 			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
+		}
+		else if (!bSwapping)
+		{
+			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
 		}
 
 		// Set EquippedWeapon to the newly spawned Weapon
@@ -546,7 +546,7 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	}
 
 	DropWeapon();
-	EquipWeapon(WeaponToSwap);
+	EquipWeapon(WeaponToSwap, true);
 	TraceHitItem = nullptr;
 	TraceHitItemLastFrame = nullptr;
 }
@@ -807,9 +807,16 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	 ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 5);
  }
 
+PRAGMA_DISABLE_OPTIMIZATION
  void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
  {
-	 if (CombatState != ECombatState::ECS_Unoccupied || CurrentItemIndex == NewItemIndex || NewItemIndex == EquippedWeapon->GetSlotIndex() || NewItemIndex >= Inventory.Num())
+	 const bool bCanExchangeItems = 
+		 CurrentItemIndex != NewItemIndex && 
+		 NewItemIndex != EquippedWeapon->GetSlotIndex() && 
+		 NewItemIndex < Inventory.Num() &&
+		 (CombatState == ECombatState::ECS_Unoccupied || CombatState == ECombatState::ECS_Equipping);
+
+	 if (!bCanExchangeItems)
 	 {
 		 return;
 	 }
@@ -829,7 +836,7 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 		 AnimInstance->Montage_JumpToSection(FName("Equip"));
 	 }
  }
-
+PRAGMA_ENABLE_OPTIMIZATION
  int32 AShooterCharacter::GetInterpLocationIndex()
  {
 	 int32 LowestIndex = 1;
