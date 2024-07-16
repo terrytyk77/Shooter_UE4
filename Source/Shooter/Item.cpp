@@ -35,6 +35,7 @@ AItem::AItem(const FObjectInitializer& ObjectInitializer)
 	, FresnelReflectFraction(4.f)
 	, PulseCurveTime(5.f)
 	, SlotIndex(0)
+	, bCharacterInventoryFull(false) 
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
