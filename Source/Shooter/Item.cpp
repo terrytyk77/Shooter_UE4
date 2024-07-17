@@ -83,18 +83,29 @@ void AItem::BeginPlay()
 
 void AItem::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!OtherActor) return;
+	if (!OtherActor)	
+	{
+		return;
+	}
 
 	if (AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(OtherActor))
+	{
 		ShooterCharacter->IncrementOverlappedItemCount(1);
+	}
 }
 
 void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!OtherActor) return;
+	if (!OtherActor)
+	{
+		return;
+	}
 
 	if (AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(OtherActor))
+	{
 		ShooterCharacter->IncrementOverlappedItemCount(-1);
+		ShooterCharacter->UnHighlightInventorySlot();
+	}
 }
 
 void AItem::SetActiveStars()
@@ -215,6 +226,7 @@ void AItem::FinishInterping()
 		// Subtract 1 from the Item Count of the interp location struct
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
+		Character->UnHighlightInventorySlot();
 	}
 
 	// Set scale back to normal
@@ -414,8 +426,8 @@ void AItem::UpdatePulse()
 
 	if (DynamicMaterialInstance)
 	{
-		DynamicMaterialInstance->SetScalarParameterValue(TEXT("Glow Amount"), CurveValue.X * GlowAmount);
-		DynamicMaterialInstance->SetScalarParameterValue(TEXT("Fresnel Exponent"), CurveValue.Y * FresnelExponent);
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), CurveValue.X * GlowAmount);
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelExponent"), CurveValue.Y * FresnelExponent);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelReflectFraction"), CurveValue.Z * FresnelReflectFraction);
 	}
 }
