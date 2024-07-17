@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "WeaponType.h"
 #include "ShooterAnimInstance.generated.h"
 
 UENUM(BlueprintType)
@@ -17,9 +18,6 @@ enum class EOffsetState : uint8
 	EOS_MAX			UMETA(DisplayName = "DefaultMAX")
 };
 
-/**
- * 
- */
 UCLASS()
 class SHOOTER_API UShooterAnimInstance : public UAnimInstance
 {
@@ -101,7 +99,7 @@ private:
 	/** Character Yaw last frame */
 	FRotator CharacterRotationLastFrame;
 
-	/** Yaw delta used for leaning in the running blendspace */
+	/** Yaw delta used for leaning in the running blend space */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Lean, meta = (AllowPrivateAccess = "true"))
 	float YawDelta;
 
@@ -120,4 +118,8 @@ private:
 	/** True when turning in place */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	bool bTurningInPlace;
+
+	/** Weapon type for the currently equipped weapon */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	EWeaponType EquippedWeaponType;
 };

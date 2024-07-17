@@ -3,6 +3,7 @@
 
 #include "ShooterAnimInstance.h"
 #include "ShooterCharacter.h"
+#include "Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -49,9 +50,13 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 
 		// Is the character accelerating?
 		if (ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f)
+		{
 			bIsAccelerating = true;
+		}
 		else
+		{
 			bIsAccelerating = false;
+		}
 
 		// Calculate MovementOffsetYaw
 		FRotator AimRotation = ShooterCharacter->GetBaseAimRotation();
@@ -59,19 +64,35 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		
 		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
 		
-		if(ShooterCharacter->GetVelocity().Size() > 0.f)
+		if (ShooterCharacter->GetVelocity().Size() > 0.f)
+		{
 			LastMovementOffsetYaw = MovementOffsetYaw;
-
+		}
+			
 		bAiming = ShooterCharacter->GetAiming();
 
 		if (bReloading)
+		{
 			OffsetState = EOffsetState::EOS_Reloading;
+		}
 		else if (bIsInAir)
+		{
 			OffsetState = EOffsetState::EOS_InAir;
+		}
 		else if (ShooterCharacter->GetAiming())
+		{
 			OffsetState = EOffsetState::EOS_Aiming;
+		}
 		else
+		{
 			OffsetState = EOffsetState::EOS_Hip;
+		}
+
+		// Check if ShooterCharacter has a valid EquippedWeapon
+		if (AWeapon* CurrentEquippedWeapon = ShooterCharacter->GetEquippedWeapon())
+		{
+			EquippedWeaponType = CurrentEquippedWeapon->GetWeaponType();
+		}
 	}
 
 	TurnInPlace();

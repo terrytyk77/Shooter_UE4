@@ -5,19 +5,12 @@
 #include "CoreMinimal.h"
 #include "Item.h"
 #include "AmmoType.h"
+#include "WeaponType.h"
 #include "Engine/DataTable.h"
 #include "Weapon.generated.h"
 
 class USoundCue;
 class WidgetComponent;
-
-UENUM(BlueprintType)
-enum class EWeaponType : uint8
-{
-	EWT_SubmachineGun UMETA(DisplayName = "SubmachineGun"),
-	EWT_AssaultRifle UMETA(DisplayName = "AssaultRifle"),
-	EWT_MAX UMETA(DisplayName = "DefaultMax")
-};
 
 USTRUCT(BlueprintType)
 struct FWeaponDataTable : public FTableRowBase
@@ -53,7 +46,7 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialInstance* MaterialInstance;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaterialIndex;
 };
