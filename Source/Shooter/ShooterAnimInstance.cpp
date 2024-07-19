@@ -187,7 +187,9 @@ void UShooterAnimInstance::TurnInPlace()
 void UShooterAnimInstance::Lean(float DeltaTime)
 {
 	if (!ShooterCharacter)
+	{
 		return;
+	}
 
 	CharacterRotationLastFrame = CharacterRotation;
 	CharacterRotation = ShooterCharacter->GetActorRotation();

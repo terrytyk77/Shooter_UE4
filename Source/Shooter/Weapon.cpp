@@ -97,9 +97,12 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 			AmmoType = WeaponDataRow->AmmoType;
 			Ammo = WeaponDataRow->WeaponAmmo;
 			MagazineCapacity = WeaponDataRow->MagazineCapacity;
+			ClipBoneName = WeaponDataRow->ClipBoneName;
+			ReloadMontageSection = WeaponDataRow->ReloadMontageSection;
 			SetPickupSound(WeaponDataRow->PickupSound);
 			SetEquipSound(WeaponDataRow->EquipSound);
 			GetItemMesh()->SetSkeletalMesh(WeaponDataRow->ItemMesh);
+			GetItemMesh()->SetAnimInstanceClass(WeaponDataRow->AnimBP);
 			SetItemName(WeaponDataRow->ItemName);
 			SetInventoryIcon(WeaponDataRow->InventoryIcon);
 			SetAmmoIcon(WeaponDataRow->AmmoIcon);
