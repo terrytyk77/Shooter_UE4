@@ -75,6 +75,9 @@ struct FWeaponDataTable : public FTableRowBase
 	UTexture2D* CrosshairTop;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAutomatic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float AutoFireRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -82,6 +85,9 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundCue* FireSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName BoneToHide;
 };
 
 UCLASS()
@@ -96,7 +102,11 @@ public:
 
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void BeginPlay() override;
+
 	void StopFalling();
+	void FinishMovingSlide();
+	void UpdateSlideDisplacement();
 
 private:
 	FTimerHandle ThrowWeaponTimer;
@@ -151,6 +161,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	UTexture2D* CrosshairTop;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+	bool bAutomatic;
+
 	/** The speed at which automatic fire happens */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	float AutoFireRate;
@@ -163,18 +176,43 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* FireSound;
 
-public:
-	/** Adds an impulse to the Weapon */
-	void ThrowWeapon();
+	/** Name of the bone to hide on the weapon mesh */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+	FName BoneToHide;
 
+	/** Amount that the slide is pushed back during pistol fire */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float SlideDisplacement;
+
+	/** Curve for the slide displacement */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SlideDisplacementCurve;
+
+	/** Timer handle for updating SlideDisplacement */
+	FTimerHandle SlideTimer;
+
+	/** Time for displacing the slide during pistol fire */
+	float SlideDisplacementTime;
+
+	/** True when moving the pistol slide */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	bool bMovingSlide;
+
+	/** Max distance for the slide on the pistol */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float MaxSlideDisplacement;
+
+	/** Max rotation for the pistol recoil */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float MaxRecoilRotation;
+
+	/** Amount that the pistol will rotate during pistol fire */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float RecoilRotation;
+
+public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
-
-	/** Called from Character class when firing weapon */
-	void DecrementAmmo();
-	void ReloadAmmo(int32 Amount);
-	FORCEINLINE void SetMovingClip(bool Move) { bMovingClip = Move; }
-
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE EAmmoType GetAmmoType() const { return AmmoType; }
 	FORCEINLINE FName GetReloadMontageSection() const { return ReloadMontageSection; }
@@ -182,6 +220,17 @@ public:
 	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
+	FORCEINLINE bool GetIsAutomatic() const { return bAutomatic; }
+	FORCEINLINE void SetMovingClip(bool Move) { bMovingClip = Move; }
+
+	/** Adds an impulse to the Weapon */
+	void ThrowWeapon();
+
+	/** Called from Character class when firing weapon */
+	void DecrementAmmo();
+	void ReloadAmmo(int32 Amount);
 
 	bool ClipIsFull();
+
+	void StartSlideTimer();
 };
