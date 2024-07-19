@@ -49,8 +49,6 @@ AShooterCharacter::AShooterCharacter()
 	// Bullet fire timer variables
 	, ShootTimeDuration(0.05f)
 	, bFiringBullet(false)
-	// Automatic fire variables
-	, AutomaticFireRate(0.1f)
 	, bShouldFire(true)
 	, bFireButtonPressed(false)
 	// Item trace variables
@@ -83,7 +81,7 @@ AShooterCharacter::AShooterCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Create a camera boom (pulls in towards the character if there is a collison)
+	// Create a camera boom (pulls in towards the character if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 250.f; // The camera follows at this distance behind the character
@@ -320,15 +318,15 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 		// Spread the crosshairs slowly while in air
 		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
 	else // Character is on the ground
-		// Shrink the crosshairs rapidely while on the ground
+		// Shrink the crosshairs rapidly while on the ground
 		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 
 	// Calculate crosshair aim factor
 	if(bAiming) // Is aiming?
-		// Shrink the crosshairs rapidely while aiming
+		// Shrink the crosshairs rapidly while aiming
 		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.6f, DeltaTime, 30.f);
 	else
-		// Spread the crosshairs rapidely while not aiming
+		// Spread the crosshairs rapidly while not aiming
 		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0, DeltaTime, 30.f);
 
 	// True 0.05 second after firing
@@ -365,8 +363,13 @@ void AShooterCharacter::FireButtonReleased()
 
 void AShooterCharacter::StartFireTimer()
 {
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
 	CombatState = ECombatState::ECS_FireTimerInProgress;
-	GetWorldTimerManager().SetTimer(AutoFireTimer, this, &AShooterCharacter::AutoFireReset, AutomaticFireRate);
+	GetWorldTimerManager().SetTimer(AutoFireTimer, this, &AShooterCharacter::AutoFireReset, EquippedWeapon->GetAutoFireRate());
 }
 
 void AShooterCharacter::AutoFireReset()
@@ -579,14 +582,20 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 
  bool AShooterCharacter::WeaponHasAmmo()
  {
-	 if (!EquippedWeapon) return false;
+	 if (!EquippedWeapon)
+	 {
+		 return false;
+	 }
+
 	 return EquippedWeapon->GetAmmo() > 0;
  }
 
  void AShooterCharacter::PlayFireSound()
  {
-	 if (FireSound)
+	 if (USoundCue* FireSound = EquippedWeapon->GetFireSound())
+	 {
 		 UGameplayStatics::PlaySound2D(this, FireSound);
+	 }
  }
 
  void AShooterCharacter::SendBullet()
@@ -596,8 +605,10 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 	 {
 		 const FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
 
-		 if (MuzzleFlash)
+		 if (UParticleSystem* MuzzleFlash = EquippedWeapon->GetMuzzleFlash())
+		 {
 			 UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+		 }
 
 		 FVector BeamEnd;
 		 bool bBeamEnd = GetBeamEndLocation(
