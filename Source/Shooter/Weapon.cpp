@@ -110,6 +110,11 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 			SetMaterialInstance(WeaponDataRow->MaterialInstance);
 			GetItemMesh()->SetMaterial(GetMaterialIndex(), nullptr); // Removing the previous material
 			SetMaterialIndex(WeaponDataRow->MaterialIndex);
+			CrosshairMiddle = WeaponDataRow->CrosshairMiddle;
+			CrosshairLeft = WeaponDataRow->CrosshairLeft;
+			CrosshairRight = WeaponDataRow->CrosshairRight;
+			CrosshairBottom = WeaponDataRow->CrosshairBottom;
+			CrosshairTop = WeaponDataRow->CrosshairTop;
 
 			if (GetMaterialInstance())
 			{
