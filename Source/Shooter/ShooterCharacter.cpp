@@ -40,7 +40,7 @@ AShooterCharacter::AShooterCharacter()
 	, CameraCurrentFOV(0.f) // Set in BeginPlay
 	, CameraZoomedFOV(25.f)
 	, ZoomInterpSpeed(20.f)
-	// Crosshair spread factos
+	// Crosshair spread factor
 	, CrosshairSpreadMultiplier(0.f)
 	, CrosshairVelocityFactor(0.f)
 	, CrosshairInAirFactor(0.f)
@@ -233,6 +233,11 @@ void AShooterCharacter::FireWeapon()
 		StartCrosshairBulletFire();
 		EquippedWeapon->DecrementAmmo();
 		StartFireTimer();
+
+		if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol)
+		{
+			EquippedWeapon->StartSlideTimer();
+		}
 	}
 }
 
@@ -265,8 +270,10 @@ bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, 
 void AShooterCharacter::AimingButtonPressed()
 {
 	bAimingButtonPressed = true;
-	if (CombatState != ECombatState::ECS_Reloading)
+	if (CombatState != ECombatState::ECS_Reloading && CombatState != ECombatState::ECS_Reloading)
+	{
 		Aim();
+	}
 }
 
 void AShooterCharacter::AimingButtonReleased()
@@ -341,7 +348,6 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 void AShooterCharacter::StartCrosshairBulletFire()
 {
 	bFiringBullet = true;
-
 	GetWorldTimerManager().SetTimer(CrosshairShootTimer, this, &AShooterCharacter::FinishCrosshairBulletFire, ShootTimeDuration);
 }
 
@@ -376,10 +382,17 @@ void AShooterCharacter::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
 
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
 	if (WeaponHasAmmo())
 	{
-		if (bFireButtonPressed)
+		if (bFireButtonPressed && EquippedWeapon->GetIsAutomatic())
+		{
 			FireWeapon();
+		}
 	}
 	else
 	{
@@ -851,6 +864,11 @@ void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 New
 		return;
 	}
 
+	if (bAiming)
+	{
+		StopAiming();
+	}
+
 	auto OldEquippedWeapon = EquippedWeapon;
 	auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
 	EquipWeapon(NewWeapon);
@@ -1004,8 +1022,12 @@ void AShooterCharacter::FinishReloading()
 {
 	// Update the Combat State
 	CombatState = ECombatState::ECS_Unoccupied;
-	if (bAimingButtonPressed) Aim();
-	if (!EquippedWeapon) return;
+
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
 	const EAmmoType AmmoType{ EquippedWeapon->GetAmmoType() };
 
 	// Update the AmmoMap
@@ -1032,11 +1054,36 @@ void AShooterCharacter::FinishReloading()
 			AmmoMap.Add(AmmoType, CarriedAmmo);
 		}
 	}
+
+	if (bAimingButtonPressed)
+	{
+		Aim();
+	}
+
+	if (bFireButtonPressed)
+	{
+		FireWeapon();
+	}
 }
 
 void AShooterCharacter::FinishEquipping()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
+	if (bAimingButtonPressed)
+	{
+		Aim();
+	}
+
+	if (bFireButtonPressed)
+	{
+		FireWeapon();
+	}
 }
 
 void AShooterCharacter::ResetPickupSoundTimer()

@@ -14,6 +14,11 @@ AWeapon::AWeapon(const FObjectInitializer& ObjectInitializer)
 	, AmmoType(EAmmoType::EAT_9mm)
 	, ReloadMontageSection(FName(TEXT("Reload SMG")))
 	, ClipBoneName(FName(TEXT("smg_clip")))
+	, SlideDisplacement(0)
+	, bMovingSlide(false)
+	, MaxSlideDisplacement(4.f)
+	, MaxRecoilRotation(20.f)
+	, bAutomatic(true)
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -28,6 +33,9 @@ void AWeapon::Tick(float DeltaTime)
 		const FRotator MeshRotation{ 0.f, GetItemMesh()->GetComponentRotation().Yaw, 0.f };
 		GetItemMesh()->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
 	}
+
+	// Update slide on pistol
+	UpdateSlideDisplacement();
 }
 
 void AWeapon::ThrowWeapon()
@@ -71,6 +79,12 @@ bool AWeapon::ClipIsFull()
 	return Ammo >= MagazineCapacity;
 }
 
+void AWeapon::StartSlideTimer()
+{
+	bMovingSlide = true;
+	GetWorldTimerManager().SetTimer(SlideTimer, this, &ThisClass::FinishMovingSlide, SlideDisplacementTime);
+}
+
 void AWeapon::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
@@ -89,6 +103,9 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 			break;
 		case EWeaponType::EWT_AssaultRifle:
 			WeaponDataRow = WeaponDataTable->FindRow<FWeaponDataTable>(FName("AssaultRifle"), TEXT(""));
+			break;
+		case EWeaponType::EWT_Pistol:
+			WeaponDataRow = WeaponDataTable->FindRow<FWeaponDataTable>(FName("Pistol"), TEXT(""));
 			break;
 		}
 
@@ -118,6 +135,8 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 			AutoFireRate = WeaponDataRow->AutoFireRate;
 			MuzzleFlash = WeaponDataRow->MuzzleFlash;
 			FireSound = WeaponDataRow->FireSound;
+			BoneToHide = WeaponDataRow->BoneToHide;
+			bAutomatic = WeaponDataRow->bAutomatic;
 
 			if (GetMaterialInstance())
 			{
@@ -130,9 +149,45 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 	}
 }
 
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (BoneToHide != FName(""))
+	{
+		GetItemMesh()->HideBoneByName(BoneToHide, EPhysBodyOp::PBO_None);
+	}
+
+	if (SlideDisplacementCurve)
+	{
+		SlideDisplacementTime = SlideDisplacementCurve->FloatCurve.GetLastKey().Time;
+	}
+}
+
 void AWeapon::StopFalling()
 {
 	bFalling = false;
 	SetItemState(EItemState::EIS_Pickup);
 	StartPulseTimer();
+}
+
+void AWeapon::FinishMovingSlide()
+{
+	bMovingSlide = false;
+}
+
+void AWeapon::UpdateSlideDisplacement()
+{
+	if (!bMovingSlide)
+	{
+		return;
+	}
+
+	if (SlideDisplacementCurve)
+	{
+		const float ElapsedTime{ GetWorldTimerManager().GetTimerElapsed(SlideTimer) };
+		const float CurveValue{ SlideDisplacementCurve->GetFloatValue(ElapsedTime) };
+		SlideDisplacement = CurveValue * MaxSlideDisplacement;
+		RecoilRotation = CurveValue * MaxRecoilRotation;
+	}
 }
