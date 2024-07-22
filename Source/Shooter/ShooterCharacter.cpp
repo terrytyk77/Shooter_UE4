@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ShooterCharacter.h"
+#include "Shooter.h"
 #include "Item.h"
 #include "Weapon.h"
 #include "Ammo.h"
@@ -11,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Sound/SoundCue.h"
 
 #include "Components/WidgetComponent.h"
@@ -908,6 +910,19 @@ void AShooterCharacter::HighlightInventorySlot()
 	const int32 EmptySlot{ GetEmptyInventorySlot() };
 	HighlightIconDelegate.Broadcast(EmptySlot, true);
 	HighlightedSlot = EmptySlot;
+}
+
+EPhysicalSurface AShooterCharacter::GetSurfaceType()
+{
+	FHitResult HitResult;
+	const FVector Start{ GetActorLocation() };
+	const FVector End{ Start + FVector{0.f, 0.f, -400.f} };
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility, QueryParams);
+
+	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 }
 
 void AShooterCharacter::UnHighlightInventorySlot()
