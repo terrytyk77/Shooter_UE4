@@ -10,6 +10,7 @@
 AEnemy::AEnemy()
 	: Health(100.f)
 	, MaxHealth(Health)
+	, HealthBarDisplayTime(4.f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,6 +23,12 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+}
+
+void AEnemy::ShowHealthBar_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(HealthBarTimer);
+	GetWorldTimerManager().SetTimer(HealthBarTimer, this, &ThisClass::HideHealthBar, HealthBarDisplayTime);
 }
 
 // Called every frame
@@ -49,6 +56,8 @@ void AEnemy::BulletHit_Implementation(const FHitResult& HitResult)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, HitResult.Location, FRotator{ 0.f }, true);
 	}
+
+	ShowHealthBar();
 }
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

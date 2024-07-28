@@ -17,9 +17,6 @@ public:
 	AEnemy();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	/** Particle to spawn when hit by bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
 	class UParticleSystem* ImpactParticles;
@@ -39,6 +36,24 @@ protected:
 	/** Name of the head bone */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
 	FString HeadBone;
+
+	/** Time to display health bar once shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	float HealthBarDisplayTime;
+
+	FTimerHandle HealthBarTimer;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ShowHealthBar();
+
+	void ShowHealthBar_Implementation();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HideHealthBar();
 
 public:	
 	// Called every frame
