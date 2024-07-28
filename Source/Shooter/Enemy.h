@@ -43,6 +43,20 @@ protected:
 
 	FTimerHandle HealthBarTimer;
 
+	/** Montage containing Hit and Death animations */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	UAnimMontage* HitMontage;
+
+	FTimerHandle HitReactTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	float HitReactTimeMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	float HitReactTimeMax;
+
+	bool bCanHitReact;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -54,6 +68,12 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void HideHealthBar();
+
+	void Die();
+
+	void PlayHitMontage(const FName& Section, float PlayRate = 1.0f);
+
+	void ResetHitReactTimer();
 
 public:	
 	// Called every frame
