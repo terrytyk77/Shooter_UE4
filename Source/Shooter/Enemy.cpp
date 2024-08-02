@@ -4,8 +4,11 @@
 #include "Enemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+#include "EnemyController.h"
 #include "Blueprint/UserWidget.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -28,6 +31,18 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
+	const FVector WorldPatrolPoint2 = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint2);
+
+	// Get enemy controller
+	EnemyController = Cast<AEnemyController>(GetController());
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
+		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint2"), WorldPatrolPoint2);
+		EnemyController->RunBehaviorTree(BehaviorTree);
+	}
 }
 
 void AEnemy::ShowHealthBar_Implementation()
