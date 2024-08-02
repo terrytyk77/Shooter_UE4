@@ -642,14 +642,16 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 				 if (AEnemy* HitEnemy = Cast<AEnemy>(BeamHitResult.Actor.Get()))
 				 {
 					 float DamageToDeal = EquippedWeapon->GetDamage(); // For body shots
-
+					 bool bIsHeadShot = false;
 					 if (BeamHitResult.BoneName.ToString() == HitEnemy->GetHeadBone())
 					 {
 						 // Head shot
 						 DamageToDeal = EquippedWeapon->GetHeadShotDamage();
+						 bIsHeadShot = true;
 					 }
 
 					 UGameplayStatics::ApplyDamage(BeamHitResult.Actor.Get(), DamageToDeal, GetController(), this, UDamageType::StaticClass());
+					 HitEnemy->ShowHitNumber(DamageToDeal, BeamHitResult.Location, bIsHeadShot);
 				 }
 			 }
 		 }
