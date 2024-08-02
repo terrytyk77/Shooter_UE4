@@ -57,6 +57,14 @@ protected:
 
 	bool bCanHitReact;
 
+	/** Map to store HitNumber widgets and their hit locations */
+	UPROPERTY(VisibleAnywhere, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	TMap<UUserWidget*, FVector> HitNumbers;
+
+	/** Time before a HitNumber is removed from the screen */
+	UPROPERTY(EditAnywhere, Category = "Combat", meta = (AllowPrivateAccesss = "true"))
+	float HitNumberDestroyTime;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -75,6 +83,14 @@ protected:
 
 	void ResetHitReactTimer();
 
+	UFUNCTION(BlueprintCallable)
+	void StoreHitNumber(UUserWidget* const HitNumber, const FVector& Location);
+
+	UFUNCTION()
+	void DestroyHitNumber(UUserWidget* HitNumber);
+
+	void UpdateHitNumbers();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -88,4 +104,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	FORCEINLINE FString GetHeadBone() const { return HeadBone; }
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowHitNumber(const int32 Damage, FVector HitLocation, bool bHeadShot);
 };
