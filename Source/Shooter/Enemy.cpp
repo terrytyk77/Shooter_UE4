@@ -2,7 +2,9 @@
 
 
 #include "Enemy.h"
+#include "ShooterCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SphereComponent.h"
 #include "Sound/SoundCue.h"
 #include "EnemyController.h"
 #include "Blueprint/UserWidget.h"
@@ -19,16 +21,22 @@ AEnemy::AEnemy()
 	, HitReactTimeMin(0.4f)
 	, HitReactTimeMax(1.5f)
 	, HitNumberDestroyTime(1.5f)
+	, bStunned(false)
+	, StunChance(0.35f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	AggroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AggroSphere"));
+	AggroSphere->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AggroSphere->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::AggroSphereOverlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
@@ -110,6 +118,29 @@ void AEnemy::UpdateHitNumbers()
 	}
 }
 
+void AEnemy::AggroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OtherActor || !EnemyController)
+	{
+		return;
+	}
+
+	if (AShooterCharacter* Character = Cast<AShooterCharacter>(OtherActor))
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
+	}
+}
+
+void AEnemy::SetStunned(bool Stunned)
+{
+	bStunned = Stunned;
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Stunned"), Stunned);
+	}
+}
+
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
@@ -138,7 +169,15 @@ void AEnemy::BulletHit_Implementation(const FHitResult& HitResult)
 	}
 
 	ShowHealthBar();
-	PlayHitMontage(FName{ "HitReactFront" });
+
+	// Determine whether bullet hit stuns
+	const float Stunned = FMath::FRand();
+	if (Stunned <= StunChance)
+	{
+		// Stun the Enemy
+		PlayHitMontage(FName{ "HitReactFront" });
+		SetStunned(true);
+	}
 }
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

@@ -7,7 +7,10 @@
 #include "BulletHitInterface.h"
 #include "Enemy.generated.h"
 
+class USoundCue;
+class UParticleSystem;
 class AEnemyController;
+class USphereComponent;
 
 UCLASS()
 class SHOOTER_API AEnemy : public ACharacter, public IBulletHitInterface
@@ -21,11 +24,11 @@ public:
 protected:
 	/** Particle to spawn when hit by bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	class UParticleSystem* ImpactParticles;
+	UParticleSystem* ImpactParticles;
 
 	/** Sound to play when hit by bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* ImpactSound;
+	USoundCue* ImpactSound;
 
 	/** Current health of the enemy */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
@@ -82,6 +85,18 @@ protected:
 	UPROPERTY()
 	AEnemyController* EnemyController;
 
+	/** Overlap sphere for when the enemy becomes hostile */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* AggroSphere;
+
+	/** True when playing the get hit animation */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bStunned;
+
+	/** Chance of being stunned. 0: no stun chance, 1: 100% stun chance */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1"))
+	float StunChance;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -107,6 +122,13 @@ protected:
 	void DestroyHitNumber(UUserWidget* HitNumber);
 
 	void UpdateHitNumbers();
+
+	/** Called when something overlaps with the aggro sphere*/
+	UFUNCTION()
+	void AggroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable)
+	void SetStunned(bool Stunned);
 
 public:	
 	// Called every frame
