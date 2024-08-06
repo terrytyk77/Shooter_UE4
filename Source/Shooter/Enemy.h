@@ -97,6 +97,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1"))
 	float StunChance;
 
+	/** True when in attack range; time to attack! */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bInAttackRange;
+
+	/** Sphere for attack range */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* AttackSphere;
+
+	/** Montage containing different attacks animations */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* AttackMontage;
+
+	/** The attacks montage section names */
+	FName AttackLFast;
+	FName AttackRFast;
+	FName AttackL;
+	FName AttackR;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -123,12 +141,28 @@ protected:
 
 	void UpdateHitNumbers();
 
-	/** Called when something overlaps with the aggro sphere*/
+	/** Called when something overlaps with the Aggro Sphere*/
 	UFUNCTION()
-	void AggroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void AggroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION(BlueprintCallable)
 	void SetStunned(bool Stunned);
+
+	/** Called when something overlaps with the Attack Range Sphere*/
+	UFUNCTION()
+	void AttackSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void AttackSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SetInAttackRange(bool InAttackRange);
+
+	UFUNCTION(BlueprintCallable)
+	void PlayAttackMontage(const FName& Section, float PlayRate = 1.0f);
+
+	UFUNCTION(BlueprintPure)
+	const FName& GetAttackSectionName();
 
 public:	
 	// Called every frame
