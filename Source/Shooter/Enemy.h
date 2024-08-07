@@ -12,6 +12,7 @@ class UBoxComponent;
 class UParticleSystem;
 class AEnemyController;
 class USphereComponent;
+class AShooterCharacter;
 
 UCLASS()
 class SHOOTER_API AEnemy : public ACharacter, public IBulletHitInterface
@@ -128,6 +129,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float BaseDamage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FName LeftWeaponSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FName RightWeaponSocket;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -193,7 +200,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void DeactivateRightWeapon();
 
-	void DoDamage(AActor* Victim);
+	void DoDamage(AShooterCharacter* Victim);
+	void SpawnBlood(AShooterCharacter* Victim, const FName& SocketName);
 
 public:	
 	// Called every frame

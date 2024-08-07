@@ -96,6 +96,7 @@ public:
 
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE USoundCue* GetMeleeImpactSound() const { return MeleeImpactSound; }
+	FORCEINLINE UParticleSystem* GetBloodParticles() const { return BloodParticles; }
 
 	// Take combat damage
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -529,4 +530,7 @@ private:
 	/** Sound made when Character gets hit by a melee attack */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	USoundCue* MeleeImpactSound;
+	/** Blood splatter particles for melee hit */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* BloodParticles;
 };
