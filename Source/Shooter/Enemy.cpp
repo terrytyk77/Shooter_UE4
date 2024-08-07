@@ -279,6 +279,11 @@ void AEnemy::DoDamage(AActor* Victim)
 	if (AShooterCharacter* Character = Cast<AShooterCharacter>(Victim))
 	{
 		UGameplayStatics::ApplyDamage(Character, BaseDamage, EnemyController, this, UDamageType::StaticClass());
+
+		if (Character->GetMeleeImpactSound())
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, Character->GetMeleeImpactSound(), GetActorLocation());
+		}
 	}
 }
 
