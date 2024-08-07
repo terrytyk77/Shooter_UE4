@@ -135,6 +135,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	FName RightWeaponSocket;
 
+	/** True when Enemy can attack */
+	UPROPERTY(VisibleAnywhere, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanAttack;
+
+	FTimerHandle AttackWaitTimer;
+
+	/** Minimum wait time between attacks */
+	UPROPERTY(EditAnywhere, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float AttackWaitTime;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -202,6 +212,8 @@ protected:
 
 	void DoDamage(AShooterCharacter* Victim);
 	void SpawnBlood(AShooterCharacter* Victim, const FName& SocketName);
+
+	void ResetCanAttack();
 
 public:	
 	// Called every frame
