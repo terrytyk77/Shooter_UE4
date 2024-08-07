@@ -22,7 +22,8 @@ enum class ECombatState : uint8
 	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
 	ECS_Equipping				UMETA(DisplayName = "Equipping"),
-	ECS_MAX						UMETA(DisplayName = "DefaultMax")
+	ECS_Stunned					UMETA(DisplayName = "Stunned"),
+	ECS_MAX						UMETA(DisplayName = "DefaultMax", Hidden)
 };
 
 USTRUCT(BlueprintType)
@@ -97,6 +98,9 @@ public:
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE USoundCue* GetMeleeImpactSound() const { return MeleeImpactSound; }
 	FORCEINLINE UParticleSystem* GetBloodParticles() const { return BloodParticles; }
+
+	void Stun();
+	FORCEINLINE float GetStunChance() const { return StunChance; }
 
 	// Take combat damage
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -248,6 +252,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
+
+	UFUNCTION(BlueprintCallable)
+	void EndStun();
 
 private:
 	/** Camera boom positioning the Camera behind the character */
@@ -530,7 +537,16 @@ private:
 	/** Sound made when Character gets hit by a melee attack */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	USoundCue* MeleeImpactSound;
+
 	/** Blood splatter particles for melee hit */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* BloodParticles;
+
+	/** Hit react anim montage for when Character is stunned */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitReactMontage;
+
+	/** Chance of being stunned when hit by an enemy */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float StunChance;
 };
