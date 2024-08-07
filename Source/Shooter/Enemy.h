@@ -8,6 +8,7 @@
 #include "Enemy.generated.h"
 
 class USoundCue;
+class UBoxComponent;
 class UParticleSystem;
 class AEnemyController;
 class USphereComponent;
@@ -115,6 +116,18 @@ protected:
 	FName AttackL;
 	FName AttackR;
 
+	/** Collision volume for the left weapon */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* LeftWeaponCollision;
+
+	/** Collision volume for the right weapon */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* RightWeaponCollision;
+
+	/** Base damage for enemy */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float BaseDamage;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -163,6 +176,24 @@ protected:
 
 	UFUNCTION(BlueprintPure)
 	const FName& GetAttackSectionName();
+
+	UFUNCTION()
+	void OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnRightWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	/** Activate/Deactivate collisions for weapon boxes*/
+	UFUNCTION(BlueprintCallable)
+	void ActivateLeftWeapon();
+	UFUNCTION(BlueprintCallable)
+	void DeactivateLeftWeapon();
+	UFUNCTION(BlueprintCallable)
+	void ActivateRightWeapon();
+	UFUNCTION(BlueprintCallable)
+	void DeactivateRightWeapon();
+
+	void DoDamage(AActor* Victim);
 
 public:	
 	// Called every frame

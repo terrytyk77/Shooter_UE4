@@ -3,15 +3,16 @@
 
 #include "Enemy.h"
 #include "ShooterCharacter.h"
-#include "Kismet/GameplayStatics.h"
+#include "EnemyController.h"
+#include "Sound/SoundCue.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Sound/SoundCue.h"
-#include "EnemyController.h"
-#include "Blueprint/UserWidget.h"
+#include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -28,6 +29,7 @@ AEnemy::AEnemy()
 	, AttackRFast(TEXT("AttackRFast"))
 	, AttackL(TEXT("AttackL"))
 	, AttackR(TEXT("AttackR"))
+	, BaseDamage(20.f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -41,6 +43,12 @@ AEnemy::AEnemy()
 	AttackSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRangeSphere"));
 	AttackSphere->SetupAttachment(GetRootComponent());
 	AttackSphere->SetSphereRadius(140.f);
+
+	// Construct left and right weapon collision boxes
+	LeftWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftWeaponBox"));
+	LeftWeaponCollision->SetupAttachment(GetMesh(), FName("LeftWeaponBone"));
+	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("RightWeaponBox"));
+	RightWeaponCollision->SetupAttachment(GetMesh(), FName("RightWeaponBone"));
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +59,18 @@ void AEnemy::BeginPlay()
 	AggroSphere->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::AggroSphereBeginOverlap);
 	AttackSphere->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::AttackSphereBeginOverlap);
 	AttackSphere->OnComponentEndOverlap.AddUniqueDynamic(this, &ThisClass::AttackSphereEndOverlap);
+
+	// Bind functions to overlap events for weapon boxes
+	LeftWeaponCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnLeftWeaponOverlap);
+	RightWeaponCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnRightWeaponOverlap);
+	// Set collision presets for weapon boxes
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	LeftWeaponCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	LeftWeaponCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RightWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	RightWeaponCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -216,6 +236,49 @@ const FName& AEnemy::GetAttackSectionName()
 	case 4:
 	default:
 		return AttackR;
+	}
+}
+
+void AEnemy::OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	DoDamage(OtherActor);
+}
+
+void AEnemy::OnRightWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	DoDamage(OtherActor);
+}
+
+void AEnemy::ActivateLeftWeapon()
+{
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
+void AEnemy::DeactivateLeftWeapon()
+{
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AEnemy::ActivateRightWeapon()
+{
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
+void AEnemy::DeactivateRightWeapon()
+{
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AEnemy::DoDamage(AActor* Victim)
+{
+	if (!Victim)
+	{
+		return;
+	}
+
+	if (AShooterCharacter* Character = Cast<AShooterCharacter>(Victim))
+	{
+		UGameplayStatics::ApplyDamage(Character, BaseDamage, EnemyController, this, UDamageType::StaticClass());
 	}
 }
 
