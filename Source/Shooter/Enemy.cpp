@@ -35,6 +35,8 @@ AEnemy::AEnemy()
 	, RightWeaponSocket(TEXT("FX_Trail_R_01"))
 	, bCanAttack(true)
 	, AttackWaitTime(1.f)
+	, bDying(false)
+	, DeathTime(4.f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -91,6 +93,7 @@ void AEnemy::BeginPlay()
 		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
 		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint2"), WorldPatrolPoint2);
 		EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("CanAttack"), bCanAttack);
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), false);
 		EnemyController->RunBehaviorTree(BehaviorTree);
 	}
 }
@@ -103,8 +106,26 @@ void AEnemy::ShowHealthBar_Implementation()
 
 void AEnemy::Die()
 {
+	if (bDying)
+	{
+		return;
+	}
+
+	bDying = true;
+
 	HideHealthBar();
-	Destroy();
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+	}
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+		EnemyController->StopMovement();
+	}
 }
 
 void AEnemy::PlayHitMontage(const FName& Section, float PlayRate)
@@ -339,6 +360,17 @@ void AEnemy::ResetCanAttack()
 	}
 }
 
+void AEnemy::FinishDeath()
+{
+	GetMesh()->bPauseAnims = true;
+	GetWorldTimerManager().SetTimer(DeathTimer, this, &ThisClass::DestroyEnemy, DeathTime);
+}
+
+void AEnemy::DestroyEnemy()
+{
+	Destroy();
+}
+
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
@@ -364,6 +396,11 @@ void AEnemy::BulletHit_Implementation(const FHitResult& HitResult)
 	if (IsValid(ImpactParticles))
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, HitResult.Location, FRotator{ 0.f }, true);
+	}
+
+	if (bDying)
+	{
+		return;
 	}
 
 	ShowHealthBar();
