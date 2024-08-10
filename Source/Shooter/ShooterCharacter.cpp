@@ -2,25 +2,27 @@
 
 #include "ShooterCharacter.h"
 #include "BulletHitInterface.h"
+#include "EnemyController.h"
 #include "Shooter.h"
 #include "Enemy.h"
 #include "Item.h"
 #include "Weapon.h"
 #include "Ammo.h"
 
-#include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Sound/SoundCue.h"
 
-#include "Components/WidgetComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -964,6 +966,24 @@ void AShooterCharacter::EndStun()
 	}
 }
 
+void AShooterCharacter::Die()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+	}
+}
+
+void AShooterCharacter::FinishDeath()
+{
+	GetMesh()->bPauseAnims = true;
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		DisableInput(PlayerController);
+	}
+}
+
 void AShooterCharacter::UnHighlightInventorySlot()
 {
 	HighlightIconDelegate.Broadcast(HighlightedSlot, false);
@@ -1016,6 +1036,11 @@ void AShooterCharacter::StartEquipSoundTimer()
 
 void AShooterCharacter::Stun()
 {
+	if (Health <= 0.f)
+	{
+		return;
+	}
+
 	CombatState = ECombatState::ECS_Stunned;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -1030,6 +1055,13 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	if (Health - DamageAmount <= 0.f)
 	{
 		Health = 0.f;
+		Die();
+
+		if (AEnemyController* EnemyController = Cast<AEnemyController>(EventInstigator))
+		{
+			EnemyController->GetBlackboardComponent()->SetValueAsObject(FName("Target"), nullptr);
+			EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CharacterDead"), true);
+		}
 	}
 	else
 	{
