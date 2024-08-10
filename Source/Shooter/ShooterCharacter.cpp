@@ -968,6 +968,11 @@ void AShooterCharacter::EndStun()
 
 void AShooterCharacter::Die()
 {
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		DisableInput(PlayerController);
+	}
+	 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && DeathMontage)
 	{
@@ -978,10 +983,6 @@ void AShooterCharacter::Die()
 void AShooterCharacter::FinishDeath()
 {
 	GetMesh()->bPauseAnims = true;
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
-	{
-		DisableInput(PlayerController);
-	}
 }
 
 void AShooterCharacter::UnHighlightInventorySlot()
