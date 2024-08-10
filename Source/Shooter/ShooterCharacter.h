@@ -256,6 +256,11 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void EndStun();
 
+	void Die();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishDeath();
+
 private:
 	/** Camera boom positioning the Camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -549,4 +554,8 @@ private:
 	/** Chance of being stunned when hit by an enemy */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float StunChance;
+
+	/** Montage for Character death */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* DeathMontage;
 };
