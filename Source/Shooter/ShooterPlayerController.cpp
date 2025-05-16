@@ -17,11 +17,10 @@ void AShooterPlayerController::BeginPlay()
 	if (HUDOverlayClass)
 	{
 		HUDOverlay = CreateWidget<UUserWidget>(this, HUDOverlayClass);
-		if(HUDOverlay)
-		{ 
+		if (HUDOverlay)
+		{
 			HUDOverlay->AddToViewport();
 			HUDOverlay->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
-
 }

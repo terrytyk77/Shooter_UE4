@@ -2,10 +2,10 @@
 
 
 #include "EnemyController.h"
-#include "Enemy.h"
-#include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "Enemy.h"
 
 AEnemyController::AEnemyController()
 {
@@ -13,23 +13,20 @@ AEnemyController::AEnemyController()
 	check(BlackboardComponent);
 
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
-	check(BehaviorTreeComponent)
+	check(BehaviorTreeComponent);
 }
 
 void AEnemyController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+	if (InPawn == nullptr) return;
 
-	if (!InPawn)
-	{
-		return;
-	}
-
-	if (AEnemy* Enemy = Cast<AEnemy>(InPawn))
+	AEnemy* Enemy = Cast<AEnemy>(InPawn);
+	if (Enemy)
 	{
 		if (Enemy->GetBehaviorTree())
 		{
-			BlackboardComponent->InitializeBlackboard(*Enemy->GetBehaviorTree()->GetBlackboardAsset());
+			BlackboardComponent->InitializeBlackboard(*(Enemy->GetBehaviorTree()->BlackboardAsset));
 		}
 	}
 }

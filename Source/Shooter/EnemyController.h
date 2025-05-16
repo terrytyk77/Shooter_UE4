@@ -6,29 +6,28 @@
 #include "AIController.h"
 #include "EnemyController.generated.h"
 
-class UBlackboardComponent;
-class UBehaviorTreeComponent;
-
+/**
+ * 
+ */
 UCLASS()
 class SHOOTER_API AEnemyController : public AAIController
 {
 	GENERATED_BODY()
-	
+public:
 	AEnemyController();
-
-public:
-	FORCEINLINE UBlackboardComponent* GetBlackboardComponent() const { return Blackboard; }
-	FORCEINLINE UBehaviorTreeComponent* GetBehaviorTreeComponent() const { return BehaviorTreeComponent; }
-
-public:
 	virtual void OnPossess(APawn* InPawn) override;
 
 private:
 	/** Blackboard component for this enemy */
 	UPROPERTY(BlueprintReadWrite, Category = "AI Behavior", meta = (AllowPrivateAccess = "true"))
-	UBlackboardComponent* BlackboardComponent;
-	
+	class UBlackboardComponent* BlackboardComponent;
+
 	/** Behavior tree component for this enemy */
 	UPROPERTY(BlueprintReadWrite, Category = "AI Behavior", meta = (AllowPrivateAccess = "true"))
-	UBehaviorTreeComponent* BehaviorTreeComponent;
+	class UBehaviorTreeComponent* BehaviorTreeComponent;
+
+public:
+
+	FORCEINLINE UBlackboardComponent* GetBlackboardComponent() const { return BlackboardComponent; }
+	
 };

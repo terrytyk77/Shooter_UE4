@@ -5,13 +5,23 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "GameFramework/Character.h"
+#include "Components/SphereComponent.h"
+#include "Enemy.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
-AExplosive::AExplosive()
+AExplosive::AExplosive() :
+	Damage(100.f)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	ExplosiveMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ExplosiveMesh"));
+	SetRootComponent(ExplosiveMesh);
+
+	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
+	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -28,25 +38,35 @@ void AExplosive::Tick(float DeltaTime)
 
 }
 
-void AExplosive::BulletHit_Implementation(const FHitResult& HitResult)
+void AExplosive::BulletHit_Implementation(FHitResult HitResult, AActor* Shooter, AController* ShooterController)
 {
-	if (IsPendingKill())
+	if (ImpactSound)
 	{
-		return;
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+	if (ExplodeParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplodeParticles, HitResult.Location, FRotator(0.f), true);
 	}
 
-	if (IsValid(ExplodeSound))
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
-	}
+	// Apply explosive damage
+	TArray<AActor*> OverlappingActors;
+	GetOverlappingActors(OverlappingActors, ACharacter::StaticClass());
 
-	if (IsValid(ExplodeParticles))
+	for (auto Actor : OverlappingActors)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplodeParticles, HitResult.Location, FRotator{ 0.f }, true);
-	}
+		UE_LOG(LogTemp, Warning, TEXT("Actor damaged by explosive: %s"), *Actor->GetName());
 
-	// TODO: Apply expolisve damage
+		UGameplayStatics::ApplyDamage(
+			Actor,
+			Damage,
+			ShooterController,
+			Shooter,
+			UDamageType::StaticClass()
+		);
+	}
 
 	Destroy();
+
 }
 

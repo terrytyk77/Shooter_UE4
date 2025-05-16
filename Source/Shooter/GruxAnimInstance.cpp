@@ -1,11 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "GruxAnimInstance.h"
 #include "Enemy.h"
 
 void UGruxAnimInstance::UpdateAnimationProperties(float DeltaTime)
 {
-	if (!Enemy)
+	if (Enemy == nullptr)
 	{
 		Enemy = Cast<AEnemy>(TryGetPawnOwner());
 	}

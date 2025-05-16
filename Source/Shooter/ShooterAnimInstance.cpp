@@ -1,32 +1,33 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ShooterAnimInstance.h"
 #include "ShooterCharacter.h"
-#include "Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Weapon.h"
+#include "WeaponType.h"
 
-UShooterAnimInstance::UShooterAnimInstance()
-	: Speed(0.f)
-	, bIsInAir(false)
-	, bIsAccelerating(false)
-	, MovementOffsetYaw(0.f)
-	, LastMovementOffsetYaw(0.f)
-	, bAiming(false)
-	, CharacterRotation(FRotator(0.f))
-	, CharacterRotationLastFrame(FRotator(0.f))
-	, TIPCharacterYaw(0.f)
-	, TIPCharacterYawLastFrame(0.f)
-	, YawDelta(0.f)
-	, RootYawOffset(0.f)
-	, Pitch(0.f)
-	, bReloading(false)
-	, OffsetState(EOffsetState::EOS_Hip)
-	, RecoilWeight(1.f)
-	, bTurningInPlace(false)
-	, EquippedWeaponType(EWeaponType::EWT_MAX)
-	, bShouldUseFABRIK(false)
+
+UShooterAnimInstance::UShooterAnimInstance() :
+	Speed(0.f),
+	bIsInAir(false),
+	bIsAccelerating(false),
+	MovementOffsetYaw(0.f),
+	LastMovementOffsetYaw(0.f),
+	bAiming(false),
+	CharacterRotation(FRotator(0.f)),
+	CharacterRotationLastFrame(FRotator(0.f)),
+	TIPCharacterYaw(0.f),
+	TIPCharacterYawLastFrame(0.f),
+	YawDelta(0.f),
+	RootYawOffset(0.f),
+	Pitch(0.f),
+	bReloading(false),
+	OffsetState(EOffsetState::EOS_Hip),
+	RecoilWeight(1.0f),
+	bTurningInPlace(false),
+	EquippedWeaponType(EWeaponType::EWT_MAX),
+	bShouldUseFABRIK(false)
 {
 
 }
@@ -34,8 +35,9 @@ UShooterAnimInstance::UShooterAnimInstance()
 void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 {
 	if (ShooterCharacter == nullptr)
+	{
 		ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
-
+	}
 	if (ShooterCharacter)
 	{
 		bCrouching = ShooterCharacter->GetCrouching();
@@ -61,17 +63,20 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 			bIsAccelerating = false;
 		}
 
-		// Calculate MovementOffsetYaw
 		FRotator AimRotation = ShooterCharacter->GetBaseAimRotation();
-		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity());
-		
-		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
-		
+		FRotator MovementRotation =
+			UKismetMathLibrary::MakeRotFromX(
+				ShooterCharacter->GetVelocity());
+		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(
+			MovementRotation,
+			AimRotation).Yaw;
+
+
 		if (ShooterCharacter->GetVelocity().Size() > 0.f)
 		{
 			LastMovementOffsetYaw = MovementOffsetYaw;
 		}
-			
+
 		bAiming = ShooterCharacter->GetAiming();
 
 		if (bReloading)
@@ -90,14 +95,12 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		{
 			OffsetState = EOffsetState::EOS_Hip;
 		}
-
 		// Check if ShooterCharacter has a valid EquippedWeapon
-		if (AWeapon* CurrentEquippedWeapon = ShooterCharacter->GetEquippedWeapon())
+		if (ShooterCharacter->GetEquippedWeapon())
 		{
-			EquippedWeaponType = CurrentEquippedWeapon->GetWeaponType();
+			EquippedWeaponType = ShooterCharacter->GetEquippedWeapon()->GetWeaponType();
 		}
 	}
-
 	TurnInPlace();
 	Lean(DeltaTime);
 }
@@ -109,8 +112,7 @@ void UShooterAnimInstance::NativeInitializeAnimation()
 
 void UShooterAnimInstance::TurnInPlace()
 {
-	if (!ShooterCharacter)
-		return;
+	if (ShooterCharacter == nullptr) return;
 
 	Pitch = ShooterCharacter->GetBaseAimRotation().Pitch;
 
@@ -129,8 +131,8 @@ void UShooterAnimInstance::TurnInPlace()
 		TIPCharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
 		const float TIPYawDelta{ TIPCharacterYaw - TIPCharacterYawLastFrame };
 
-		// Root Yaw Offset, updated and clamped to [180, -180]
-		RootYawOffset =  UKismetMathLibrary::NormalizeAxis(RootYawOffset - TIPYawDelta);
+		// Root Yaw Offset, updated and clamped to [-180, 180]
+		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - TIPYawDelta);
 
 		// 1.0 if turning, 0.0 if not
 		const float Turning{ GetCurveValue(TEXT("Turning")) };
@@ -161,41 +163,51 @@ void UShooterAnimInstance::TurnInPlace()
 	if (bTurningInPlace)
 	{
 		if (bReloading || bEquipping)
+		{
 			RecoilWeight = 1.f;
+		}
 		else
+		{
 			RecoilWeight = 0.f;
+		}
 	}
 	else // not turning in place
 	{
 		if (bCrouching)
 		{
 			if (bReloading || bEquipping)
+			{
 				RecoilWeight = 1.f;
+			}
 			else
+			{
 				RecoilWeight = 0.1f;
+			}
 		}
 		else
 		{
 			if (bAiming || bReloading || bEquipping)
+			{
 				RecoilWeight = 1.f;
+			}
 			else
+			{
 				RecoilWeight = 0.5f;
+			}
 		}
 	}
 }
 
 void UShooterAnimInstance::Lean(float DeltaTime)
 {
-	if (!ShooterCharacter)
-	{
-		return;
-	}
-
+	if (ShooterCharacter == nullptr) return;
 	CharacterRotationLastFrame = CharacterRotation;
 	CharacterRotation = ShooterCharacter->GetActorRotation();
 
 	const FRotator Delta{ UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame) };
+
 	const float Target{ Delta.Yaw / DeltaTime };
 	const float Interp{ FMath::FInterpTo(YawDelta, Target, DeltaTime, 6.f) };
 	YawDelta = FMath::Clamp(Interp, -90.f, 90.f);
+
 }

@@ -75,3 +75,6 @@ DerivedDataCache/*
 
 # Ignore all content
 Content/*
+
+# Ignore platform specific config
+Platforms/*

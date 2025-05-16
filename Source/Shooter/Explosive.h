@@ -20,18 +20,31 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	/** Particle to spawn when hit by bullets */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+private:
+
+	/** Explosion when hit by a bullet */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	class UParticleSystem* ExplodeParticles;
 
 	/** Sound to play when hit by bullets */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* ExplodeSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	class USoundCue* ImpactSound;
+
+	/** Mesh for the explosive */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* ExplosiveMesh;
+
+	/** Used to determine what Actors overlap during explosion */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* OverlapSphere;
+
+	/** Damage amount for explosive */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	float Damage;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Inherited via IBulletHitInterface
-	virtual void BulletHit_Implementation(const FHitResult& HitResult) override;
+	virtual void BulletHit_Implementation(FHitResult HitResult, AActor* Shooter, AController* ShooterController) override;
 };
