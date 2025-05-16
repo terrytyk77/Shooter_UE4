@@ -11,8 +11,8 @@
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
-AExplosive::AExplosive() :
-	Damage(100.f)
+AExplosive::AExplosive() 
+	: Damage(100.f)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -28,14 +28,12 @@ AExplosive::AExplosive() :
 void AExplosive::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void AExplosive::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AExplosive::BulletHit_Implementation(FHitResult HitResult, AActor* Shooter, AController* ShooterController)
@@ -67,6 +65,4 @@ void AExplosive::BulletHit_Implementation(FHitResult HitResult, AActor* Shooter,
 	}
 
 	Destroy();
-
 }
-

@@ -110,39 +110,15 @@ void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void AItem::SetActiveStars()
 {
-	// The 0 element isn't used
-	for (int32 i = 0; i <= 5; i++)
-	{
-		ActiveStars.Add(false);
-	}
+	int8 _ItemRarity = (int8)ItemRarity;
+	int8 RarityCount = (int8)EItemRarity::EIR_MAX;
 
-	switch (ItemRarity)
+	for (int8 i = 0; i < RarityCount; i++)
 	{
-	case EItemRarity::EIR_Damaged:
-		ActiveStars[1] = true;
-		break;
-	case EItemRarity::EIR_Common:
-		ActiveStars[1] = true;
-		ActiveStars[2] = true;
-		break;
-	case EItemRarity::EIR_Uncommon:
-		ActiveStars[1] = true;
-		ActiveStars[2] = true;
-		ActiveStars[3] = true;
-		break;
-	case EItemRarity::EIR_Rare:
-		ActiveStars[1] = true;
-		ActiveStars[2] = true;
-		ActiveStars[3] = true;
-		ActiveStars[4] = true;
-		break;
-	case EItemRarity::EIR_Legendary:
-		ActiveStars[1] = true;
-		ActiveStars[2] = true;
-		ActiveStars[3] = true;
-		ActiveStars[4] = true;
-		ActiveStars[5] = true;
-		break;
+		if (i <= _ItemRarity)
+			ActiveStars.Add(true);
+		else
+			ActiveStars.Add(false);
 	}
 }
 
@@ -302,27 +278,27 @@ void AItem::ItemInterp(float DeltaTime)
 		if (ItemScaleCurve)
 		{
 			const float ScaleCurveValue = ItemScaleCurve->GetFloatValue(ElapsedTime);
-			SetActorScale3D(FVector(ScaleCurveValue, ScaleCurveValue, ScaleCurveValue));
+			SetActorScale3D(FVector(ScaleCurveValue));
 		}
 	}
 }
 
 FVector AItem::GetInterpLocation()
 {
-	if (Character == nullptr) return FVector(0.f);
+	if (Character == nullptr)
+	{
+		return FVector::ZeroVector;
+	}
 
 	switch (ItemType)
 	{
 	case EItemType::EIT_Ammo:
 		return Character->GetInterpLocation(InterpLocIndex).SceneComponent->GetComponentLocation();
-	break;
-
 	case EItemType::EIT_Weapon:
 		return Character->GetInterpLocation(0).SceneComponent->GetComponentLocation();
-	break;
+	default:
+		return FVector::ZeroVector;
 	}
-
-	return FVector();
 }
 
 void AItem::PlayPickupSound(bool bForcePlaySound)
@@ -370,11 +346,12 @@ void AItem::InitializeCustomDepth()
 
 void AItem::OnConstruction(const FTransform& Transform)
 {
+	Super::OnConstruction(Transform);
+	
 	// Load the data in the Item Rarity Data Table
+	FString RarityTablePath{ TEXT("DataTable'/Game/_Game/DataTable/DT_ItemRarity.DT_ItemRarity'") }; // Path to the Item Rarity Data Table
+	UDataTable * RarityTableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *RarityTablePath));
 
-	// Path to the Item Rarity Data Table
-	FString RarityTablePath(TEXT("DataTable'/Game/_Game/DataTable/ItemRarityDataTable.ItemRarityDataTable'"));
-	UDataTable* RarityTableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *RarityTablePath));
 	if (RarityTableObject)
 	{
 		FItemRarityTable* RarityRow = nullptr;
@@ -385,16 +362,16 @@ void AItem::OnConstruction(const FTransform& Transform)
 			break;
 		case EItemRarity::EIR_Common:
 			RarityRow = RarityTableObject->FindRow<FItemRarityTable>(FName("Common"), TEXT(""));
-		break;
+			break;
 		case EItemRarity::EIR_Uncommon:
 			RarityRow = RarityTableObject->FindRow<FItemRarityTable>(FName("Uncommon"), TEXT(""));
-		break;
+			break;
 		case EItemRarity::EIR_Rare:
 			RarityRow = RarityTableObject->FindRow<FItemRarityTable>(FName("Rare"), TEXT(""));
-		break;
+			break;
 		case EItemRarity::EIR_Legendary:
 			RarityRow = RarityTableObject->FindRow<FItemRarityTable>(FName("Legendary"), TEXT(""));
-		break;
+			break;
 		}
 
 		if (RarityRow)
@@ -429,6 +406,14 @@ void AItem::EnableGlowMaterial()
 	}
 }
 
+void AItem::DisableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1);
+	}
+}
+
 void AItem::UpdatePulse()
 {
 	float ElapsedTime{};
@@ -455,14 +440,6 @@ void AItem::UpdatePulse()
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), CurveValue.X * GlowAmount);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelExponent"), CurveValue.Y * FresnelExponent);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelReflectFraction"), CurveValue.Z * FresnelReflectFraction);
-	}
-}
-
-void AItem::DisableGlowMaterial()
-{
-	if (DynamicMaterialInstance)
-	{
-		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1);
 	}
 }
 

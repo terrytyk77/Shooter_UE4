@@ -512,7 +512,7 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	ShowHealthBar();
 
 	// Determine whether bullet hit stuns
-	const float Stunned = FMath::FRandRange(0.f, 1.f);
+	const float Stunned = FMath::FRand();
 	if (Stunned <= StunChance)
 	{
 		// Stun the Enemy
